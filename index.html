@@ -1399,6 +1399,34 @@ function jumpToVarianceTab(tab, ingId){
   if(ingId) setTimeout(()=>showIngredientVarianceDetail(ingId), 80);
 }
 
+  async function loadIngredientsFromAPI() {
+  try {
+    const items = await apiFetch("/api/ingredients");
+
+    if (Array.isArray(items) && items.length > 0) {
+      STATE.ingredients = items.map(i => ({
+        id: i.id,
+        name: i.name,
+        category: i.category,
+        unit: i.unit,
+        rate: i.rate,
+        opening: i.book_stock,
+        apiBookStock: i.book_stock,
+        physicalStock: i.physical_stock,
+        variance: i.variance,
+        stockValue: i.stock_value,
+        deptTotal: i.dept_total
+      }));
+
+      saveState();
+      renderInventory();
+    }
+
+    console.log("Inventory loaded from MongoDB:", items);
+  } catch (error) {
+    console.error("Failed to load inventory from API:", error);
+  }
+}
 /* =========================================================================
    RENDER: INVENTORY
 ========================================================================= */
@@ -2055,6 +2083,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (STATE && user) {
       STATE.role = roleMap[user.role] || "Owner";
       saveState();
+      
+      await loadIngredientsFromAPI();
     }
 
     renderAll();
