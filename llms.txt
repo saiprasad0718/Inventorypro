@@ -1,0 +1,14 @@
+# InventoryPro.in
+
+Restaurant inventory, production and food-cost control software for Indian restaurants and cloud kitchens.
+
+## What this site offers
+- A live, clickable prototype of InventoryPro.in seeded with a full day of demo restaurant data
+- An owner's command dashboard comparing wastage, production volume and POS sales side by side
+- Batch-level recipe (BOM) costing, raw-material receiving/issuing, wastage logging and POS reconciliation
+- A demo-request form that emails enquiries directly to the founder
+- WhatsApp contact at +91 99086 59651 for booking a live walkthrough
+
+## Contact
+- Email: saiprasad2318@gmail.com
+- WhatsApp: +91 99086 59651
