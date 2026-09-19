@@ -107,10 +107,19 @@ def _assert_safe_email(subject: str, html: str) -> None:
 
 
 async def send_email(*, to: str, subject: str, html: str, reply_to: str | None = None) -> str | None:
+    # Email is optional. If no email provider key is configured,
+    # skip sending and allow the application to continue normally.
+    if not EMAIL_KEY:
+        logger.warning("Email sending skipped: EMERGENT_EMAIL_KEY is not configured")
+        return None
+
     _assert_safe_email(subject, html)
+
     payload = {"to": [to], "subject": subject, "html": html, "from_name": EMAIL_FROM_NAME}
+
     if reply_to or EMAIL_REPLY_TO:
-        payload["contact_email"] = reply_to or EMAIL_REPLY_TO
+        payload["reply_to"] = reply_to or EMAIL_REPLY_TO
+
     try:
         async with httpx.AsyncClient(timeout=30) as client_http:
             resp = await client_http.post(
@@ -118,11 +127,14 @@ async def send_email(*, to: str, subject: str, html: str, reply_to: str | None =
                 headers={"X-Email-Key": EMAIL_KEY},
                 json=payload,
             )
+
         resp.raise_for_status()
         return resp.json().get("id")
+
     except httpx.HTTPStatusError as e:
         logger.error(f"Email send failed: {e.response.status_code} {e.response.text}")
         raise HTTPException(status_code=502, detail="Failed to send email")
+
     except Exception as e:
         logger.error(f"Email send error: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to send email")
