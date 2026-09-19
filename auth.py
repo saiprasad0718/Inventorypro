@@ -4,7 +4,8 @@ from datetime import datetime, timezone, timedelta
 
 import bcrypt
 import jwt
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, Security
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, EmailStr, Field
 
 from database import db
@@ -13,6 +14,7 @@ JWT_ALGORITHM = "HS256"
 ACCESS_TTL_HOURS = 12
 
 auth_router = APIRouter(prefix="/auth", tags=["auth"])
+security = HTTPBearer(auto_error=False)
 
 
 def hash_password(password: str) -> str:
@@ -38,9 +40,11 @@ def public_user(u: dict) -> dict:
     return {"id": u["id"], "email": u["email"], "name": u["name"], "role": u["role"]}
 
 
-async def get_current_user(request: Request) -> dict:
-    auth_header = request.headers.get("Authorization", "")
-    token = auth_header[7:] if auth_header.startswith("Bearer ") else request.cookies.get("access_token")
+async def get_current_user(
+    request: Request,
+    credentials: HTTPAuthorizationCredentials = Security(security),
+) -> dict:
+    token = credentials.credentials if credentials else request.cookies.get("access_token")
     if not token:
         raise HTTPException(status_code=401, detail="Not authenticated")
     try:
