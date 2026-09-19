@@ -1,0 +1,1973 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>InventoryPro.in — Restaurant Inventory, Production &amp; Food-Cost Control</title>
+<style>
+:root{
+  --bg:#EFEDE7;
+  --surface:#FFFFFF;
+  --surface-alt:#F7F5F0;
+  --ink:#23261F;
+  --ink-dim:#6B6F63;
+  --ink-faint:#9A9C8E;
+  --border:#DDD8CC;
+  --border-soft:#E7E3D8;
+  --accent:#A84B23;
+  --accent-soft:#F1E0D3;
+  --accent-2:#2F6F62;
+  --accent-2-soft:#DCEAE6;
+  --good:#2E7D4F;
+  --good-soft:#DFF0E6;
+  --warn:#B5710A;
+  --warn-soft:#FBEBD1;
+  --bad:#B23B34;
+  --bad-soft:#F8DEDC;
+  --sidebar:#23261F;
+  --sidebar-text:#E9E6DC;
+  --sidebar-dim:#A8A79B;
+  --radius-s:6px;
+  --radius-m:10px;
+  --radius-l:16px;
+  --shadow-card:0 1px 2px rgba(35,38,31,0.06), 0 1px 0 rgba(35,38,31,0.04);
+  --font-display: Georgia, 'Palatino Linotype', 'Iowan Old Style', serif;
+  --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  font-family:var(--font-body);
+  background:var(--bg);
+  color:var(--ink);
+  -webkit-font-smoothing:antialiased;
+  font-size:14px;
+  line-height:1.5;
+}
+button{font-family:inherit;}
+h1,h2,h3,h4{font-family:var(--font-display);font-weight:600;margin:0 0 4px 0;color:var(--ink);}
+a{color:inherit;}
+::selection{background:var(--accent-soft);}
+
+/* ===== Layout shell ===== */
+#app{display:flex;min-height:100vh;}
+
+/* Sidebar */
+#sidebar{
+  width:236px;flex-shrink:0;background:var(--sidebar);color:var(--sidebar-text);
+  display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;
+  transition:transform .25s ease;
+  z-index:50;
+}
+.brand{padding:22px 20px 14px 20px;display:flex;align-items:center;gap:10px;}
+.brand-mark{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--accent),#7A3316);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:700;color:#F4E9DE;font-size:16px;flex-shrink:0;}
+.brand-text{line-height:1.15;}
+.brand-text .name{font-family:var(--font-display);font-size:16.5px;font-weight:700;color:#fff;}
+.brand-text .tag{font-size:10.5px;color:var(--sidebar-dim);letter-spacing:.02em;}
+
+nav.nav{padding:8px 12px;flex:1;}
+.nav-section-label{font-size:10.5px;color:var(--sidebar-dim);padding:14px 10px 6px 10px;letter-spacing:.03em;}
+.nav-item{
+  display:flex;align-items:center;gap:11px;padding:9px 10px;border-radius:8px;cursor:pointer;
+  color:var(--sidebar-text);font-size:13.5px;margin-bottom:1px;user-select:none;
+}
+.nav-item:hover{background:rgba(255,255,255,0.06);}
+.nav-item.active{background:var(--accent);color:#fff;}
+.nav-item .ic{width:18px;height:18px;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.nav-item .ic svg{width:17px;height:17px;}
+
+.sidebar-foot{padding:14px 16px 18px 16px;border-top:1px solid rgba(255,255,255,0.09);}
+.user-chip{display:flex;align-items:center;gap:9px;margin-bottom:10px;}
+.user-avatar{width:30px;height:30px;border-radius:50%;background:var(--accent-2);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12.5px;flex-shrink:0;}
+.user-meta .uname{font-size:13px;font-weight:600;color:#fff;}
+.user-meta .urole{font-size:11px;color:var(--sidebar-dim);}
+select#roleSwitcher{
+  width:100%;background:rgba(255,255,255,0.08);color:#fff;border:1px solid rgba(255,255,255,0.16);
+  border-radius:7px;padding:7px 8px;font-size:12.5px;margin-bottom:8px;
+}
+select#roleSwitcher option{color:#111;}
+.btn-logout{width:100%;background:transparent;border:1px solid rgba(255,255,255,0.16);color:var(--sidebar-dim);
+  border-radius:7px;padding:7px 8px;font-size:12px;cursor:pointer;}
+.btn-logout:hover{color:#fff;border-color:rgba(255,255,255,0.3);}
+
+/* main */
+#main{flex:1;min-width:0;display:flex;flex-direction:column;}
+#topbar{
+  position:sticky;top:0;z-index:30;background:rgba(239,237,231,0.92);backdrop-filter:blur(6px);
+  border-bottom:1px solid var(--border-soft);padding:14px 26px;display:flex;align-items:center;justify-content:space-between;gap:14px;
+}
+#hamburger{display:none;background:none;border:none;cursor:pointer;padding:6px;}
+#hamburger svg{width:22px;height:22px;}
+.topbar-title h1{font-size:19px;margin:0;}
+.topbar-title .sub{font-size:12px;color:var(--ink-dim);}
+.topbar-right{display:flex;align-items:center;gap:10px;}
+.btn{
+  font-size:13px;padding:8px 14px;border-radius:8px;border:1px solid var(--border);background:var(--surface);
+  cursor:pointer;color:var(--ink);font-weight:600;display:inline-flex;align-items:center;gap:7px;white-space:nowrap;
+}
+.btn:hover{border-color:var(--ink-faint);}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:#fff;}
+.btn-primary:hover{background:#8F3F1D;}
+.btn-ghost{background:transparent;border-color:transparent;color:var(--ink-dim);}
+.btn-ghost:hover{background:var(--surface-alt);}
+.btn-sm{padding:6px 10px;font-size:12px;}
+.btn-2{background:var(--accent-2);border-color:var(--accent-2);color:#fff;}
+.btn-2:hover{background:#245A50;}
+
+#content{padding:22px 26px 60px 26px;max-width:1320px;width:100%;margin:0 auto;}
+.view{display:none;}
+.view.active{display:block;animation:fadein .18s ease;}
+@keyframes fadein{from{opacity:0;transform:translateY(3px);}to{opacity:1;transform:none;}}
+
+/* ===== Reusable pieces ===== */
+.page-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:18px;flex-wrap:wrap;}
+.page-head h2{font-size:22px;}
+.page-head .desc{color:var(--ink-dim);font-size:13px;margin-top:2px;}
+.card{background:var(--surface);border:1px solid var(--border-soft);border-radius:var(--radius-l);box-shadow:var(--shadow-card);}
+.card-pad{padding:18px 20px;}
+
+.grid-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px;}
+.metric-card{background:var(--surface);border:1px solid var(--border-soft);border-radius:var(--radius-l);padding:16px 18px;box-shadow:var(--shadow-card);}
+.metric-card .m-label{font-size:12px;color:var(--ink-dim);font-weight:600;margin-bottom:8px;}
+.metric-card .m-value{font-family:var(--font-display);font-size:26px;font-weight:700;line-height:1;}
+.metric-card .m-sub{font-size:11.5px;color:var(--ink-faint);margin-top:7px;}
+.metric-card .m-sub.good{color:var(--good);}
+.metric-card .m-sub.warn{color:var(--warn);}
+.metric-card .m-sub.bad{color:var(--bad);}
+
+.two-col{display:grid;grid-template-columns:1.15fr .85fr;gap:16px;}
+.section-title{font-size:15px;font-weight:700;font-family:var(--font-display);margin-bottom:2px;}
+.section-desc{font-size:12px;color:var(--ink-dim);margin-bottom:14px;}
+
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th{text-align:left;font-size:11px;text-transform:none;color:var(--ink-dim);font-weight:600;padding:9px 10px;border-bottom:1px solid var(--border);white-space:nowrap;}
+td{padding:10px 10px;border-bottom:1px solid var(--border-soft);vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+.table-wrap{overflow-x:auto;}
+tbody tr:hover{background:var(--surface-alt);}
+
+.badge{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:99px;font-size:11.5px;font-weight:700;}
+.badge-good{background:var(--good-soft);color:var(--good);}
+.badge-warn{background:var(--warn-soft);color:var(--warn);}
+.badge-bad{background:var(--bad-soft);color:var(--bad);}
+.badge-neutral{background:var(--surface-alt);color:var(--ink-dim);border:1px solid var(--border);}
+
+.pill-cat{font-size:11px;padding:2px 8px;border-radius:99px;background:var(--surface-alt);border:1px solid var(--border);color:var(--ink-dim);}
+
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.field{margin-bottom:14px;}
+.field label{display:block;font-size:12px;font-weight:600;color:var(--ink-dim);margin-bottom:6px;}
+.field input,.field select,.field textarea{
+  width:100%;padding:11px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;background:var(--surface-alt);
+  color:var(--ink);font-family:inherit;
+}
+.field input:focus,.field select:focus,.field textarea:focus{outline:2px solid var(--accent-2);outline-offset:0;background:#fff;}
+.field .hint{font-size:11px;color:var(--ink-faint);margin-top:5px;}
+.form-actions{display:flex;gap:10px;margin-top:6px;}
+
+.toast-wrap{position:fixed;bottom:22px;right:22px;z-index:200;display:flex;flex-direction:column;gap:8px;}
+.toast{background:var(--ink);color:#fff;padding:12px 16px;border-radius:9px;font-size:13px;box-shadow:0 8px 22px rgba(0,0,0,.2);
+  display:flex;align-items:center;gap:9px;min-width:220px;animation:toastin .2s ease;}
+.toast .dot{width:8px;height:8px;border-radius:50%;background:var(--good);flex-shrink:0;}
+@keyframes toastin{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
+
+.search-row{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:center;}
+.search-row input[type=text]{padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:var(--surface);min-width:220px;}
+.search-row select{padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:var(--surface);}
+
+.flow-cols{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px;}
+.flow-box{background:var(--surface-alt);border:1px dashed var(--border);border-radius:var(--radius-m);padding:14px;text-align:center;}
+.flow-box .flabel{font-size:11px;color:var(--ink-dim);font-weight:700;letter-spacing:.02em;}
+.flow-box .fval{font-family:var(--font-display);font-size:22px;font-weight:700;margin-top:5px;}
+.flow-box .funit{font-size:11px;color:var(--ink-faint);}
+.flow-arrow{display:flex;align-items:center;justify-content:center;color:var(--ink-faint);font-size:20px;}
+
+.chip-row{display:flex;gap:8px;flex-wrap:wrap;}
+.chip{padding:7px 13px;border-radius:99px;border:1px solid var(--border);background:var(--surface);font-size:12.5px;cursor:pointer;font-weight:600;}
+.chip.active{background:var(--ink);color:#fff;border-color:var(--ink);}
+
+.recon-card{border:1px solid var(--border-soft);border-radius:var(--radius-m);padding:14px;margin-bottom:10px;background:var(--surface-alt);}
+.recon-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+.recon-head .dish{font-weight:700;font-family:var(--font-display);font-size:15px;}
+.recon-bars{display:flex;height:10px;border-radius:99px;overflow:hidden;background:var(--border-soft);margin-bottom:10px;}
+.recon-legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11.5px;color:var(--ink-dim);}
+.recon-legend span{display:inline-flex;align-items:center;gap:5px;}
+.recon-legend i{width:8px;height:8px;border-radius:2px;display:inline-block;}
+
+.donut-wrap{display:flex;align-items:center;gap:18px;}
+.donut-legend{font-size:13px;}
+.donut-legend .row{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.donut-legend .sw{width:10px;height:10px;border-radius:3px;flex-shrink:0;}
+.donut-legend .val{font-weight:700;margin-left:auto;padding-left:12px;}
+
+.empty-note{color:var(--ink-faint);font-size:12.5px;padding:20px 0;text-align:center;}
+
+.modal-overlay{position:fixed;inset:0;background:rgba(35,38,31,0.55);z-index:150;display:none;align-items:center;justify-content:center;padding:20px;}
+.modal-overlay.show{display:flex;}
+.modal{background:#fff;border-radius:var(--radius-l);max-width:460px;width:100%;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.3);max-height:86vh;overflow-y:auto;}
+.modal h3{font-size:17px;margin-bottom:4px;}
+.modal .modal-desc{font-size:12.5px;color:var(--ink-dim);margin-bottom:16px;}
+.demo-step{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--border-soft);font-size:13px;}
+.demo-step:last-child{border-bottom:none;}
+.demo-step .chk{width:19px;height:19px;border-radius:50%;border:2px solid var(--border);flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff;}
+.demo-step.done .chk{background:var(--good);border-color:var(--good);}
+.demo-step.active .chk{border-color:var(--accent);}
+.demo-step .txt{color:var(--ink-faint);}
+.demo-step.done .txt,.demo-step.active .txt{color:var(--ink);}
+
+.consump-detail{background:var(--surface-alt);border-radius:var(--radius-s);padding:12px;font-size:12.5px;margin-top:6px;}
+.consump-detail table{font-size:12px;}
+
+.help-note{background:var(--accent-2-soft);border:1px solid #BFDAD3;color:#1E4A41;border-radius:var(--radius-m);padding:11px 14px;font-size:12.5px;margin-bottom:16px;}
+
+/* ---- attention panel (dashboard) ---- */
+.attn-item{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 13px;border:1px solid var(--border-soft);
+  border-radius:9px;margin-bottom:8px;cursor:pointer;background:var(--surface-alt);}
+.attn-item:hover{border-color:var(--accent);background:#fff;}
+.attn-item .a-left{display:flex;align-items:center;gap:10px;min-width:0;}
+.attn-item .a-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.attn-item .a-dot.bad{background:var(--bad);}
+.attn-item .a-dot.warn{background:var(--warn);}
+.attn-item .a-label{font-weight:700;font-size:13px;}
+.attn-item .a-detail{font-size:11.5px;color:var(--ink-dim);}
+.attn-item .chev{color:var(--ink-faint);flex-shrink:0;font-size:16px;}
+.attn-empty{display:flex;align-items:center;gap:10px;padding:12px 13px;background:var(--good-soft);color:var(--good);border-radius:9px;font-size:13px;font-weight:600;}
+
+/* ---- clickable metric cards ---- */
+.metric-card.m-click{cursor:pointer;transition:border-color .12s ease;}
+.metric-card.m-click:hover{border-color:var(--accent);}
+.metric-card .m-goto{font-size:10.5px;color:var(--accent);font-weight:700;margin-top:6px;}
+
+/* ---- reconciliation: quick row + collapsible adjust ---- */
+.recon-quick{display:flex;gap:10px;margin-bottom:12px;}
+.rq-item{flex:1;background:#fff;border:1px solid var(--border-soft);border-radius:9px;padding:10px 8px;text-align:center;}
+.rq-item label{display:block;font-size:10.5px;color:var(--ink-dim);font-weight:700;margin-bottom:4px;}
+.rq-item .rq-val{font-family:var(--font-display);font-size:20px;font-weight:700;line-height:1;}
+.rq-item input{width:100%;text-align:center;font-size:20px;font-weight:700;font-family:var(--font-display);border:none;background:transparent;padding:0;color:var(--accent-2);}
+.rq-item input:focus{outline:none;text-decoration:underline;}
+.rq-item.sold{border-color:var(--accent-2);}
+.link-btn{background:none;border:none;color:var(--accent);font-weight:700;font-size:11.5px;cursor:pointer;padding:0;}
+.recon-summary-line{font-size:11.5px;color:var(--ink-dim);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;}
+.recon-adjust{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border-soft);}
+@keyframes flashbg{0%{background:var(--accent-soft);}100%{background:var(--surface-alt);}}
+.recon-card.flash{animation:flashbg 1.6s ease;}
+
+/* ---- invoice sub-section on receiving form ---- */
+.form-subhead{font-size:11.5px;font-weight:700;color:var(--ink-dim);text-transform:none;margin-bottom:10px;letter-spacing:.01em;}
+.form-subsection{border-top:1px solid var(--border-soft);margin:14px 0 4px 0;padding-top:14px;}
+
+.mobile-card{background:var(--surface);border:1px solid var(--border-soft);border-radius:var(--radius-l);padding:20px;box-shadow:var(--shadow-card);max-width:440px;}
+.mobile-card h3{font-size:17px;}
+.big-input{font-size:26px !important;font-weight:700;text-align:center;padding:16px !important;}
+.big-btn{width:100%;padding:16px;font-size:15px;border-radius:10px;}
+.stepper{display:flex;align-items:center;gap:10px;}
+.stepper button{width:44px;height:44px;border-radius:10px;border:1px solid var(--border);background:var(--surface-alt);font-size:20px;cursor:pointer;flex-shrink:0;}
+.stepper input{flex:1;min-width:0;}
+
+.metric-card.clickable{cursor:pointer;transition:transform .12s ease, box-shadow .12s ease;}
+.metric-card.clickable:hover{transform:translateY(-2px);box-shadow:0 5px 16px rgba(35,38,31,0.10);}
+.metric-card .m-link{font-size:11px;color:var(--accent);font-weight:700;margin-top:8px;display:inline-flex;align-items:center;gap:3px;}
+.chip{position:relative;}
+.chip .dot-alert{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--bad);margin-left:6px;vertical-align:middle;}
+.summary-strip{display:flex;align-items:center;justify-content:space-between;gap:14px;background:var(--surface);border:1px solid var(--border-soft);border-radius:var(--radius-m);padding:12px 16px;margin-bottom:16px;flex-wrap:wrap;}
+.summary-strip .ss-counts{display:flex;gap:18px;font-size:13px;align-items:baseline;flex-wrap:wrap;}
+.summary-strip .ss-counts b{font-family:var(--font-display);font-size:16px;}
+.save-banner{background:var(--good-soft);border:1px solid #BFE0CC;color:#1E5B39;border-radius:var(--radius-m);padding:12px 16px;font-size:13px;margin-bottom:16px;display:none;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
+.save-banner.show{display:flex;}
+.bom-inline{background:var(--surface-alt);border-radius:var(--radius-s);padding:11px 12px;font-size:12.5px;margin:-2px 0 14px 0;color:var(--ink-dim);}
+.bom-inline b{color:var(--ink);}
+
+@media(max-width:980px){
+  .grid-metrics{grid-template-columns:repeat(2,1fr);}
+  .two-col{grid-template-columns:1fr;}
+  .form-grid{grid-template-columns:1fr;}
+  .flow-cols{grid-template-columns:1fr;}
+  .flow-arrow{transform:rotate(90deg);}
+  #sidebar{position:fixed;left:0;top:0;transform:translateX(-100%);box-shadow:0 0 40px rgba(0,0,0,.3);}
+  #sidebar.open{transform:translateX(0);}
+  #hamburger{display:flex;}
+  #content{padding:16px 14px 60px 14px;}
+  .topbar-title h1{font-size:16px;}
+  #topbar{padding:12px 14px;}
+}
+@media(max-width:480px){
+  .topbar-title .sub{display:none;} /* the page's own heading repeats this — no need to pay for it twice on a phone */
+  #topbar{flex-wrap:wrap;row-gap:8px;}
+  .topbar-right{width:100%;justify-content:flex-end;gap:8px;}
+  .topbar-right .btn{padding:8px 10px;font-size:12px;flex:1;justify-content:center;}
+}
+.sidebar-scrim{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:40;}
+.sidebar-scrim.show{display:block;}
+
+.disclaimer{font-size:11px;color:var(--ink-faint);margin-top:22px;padding-top:14px;border-top:1px solid var(--border-soft);}
+</style>
+</head>
+<body>
+
+<div id="app">
+  <div class="sidebar-scrim" id="scrim" onclick="closeSidebar()"></div>
+  <aside id="sidebar">
+    <div class="brand">
+      <div class="brand-mark">IP</div>
+      <div class="brand-text">
+        <div class="name">InventoryPro.in</div>
+        <div class="tag">Inventory · Production · Food Cost</div>
+      </div>
+    </div>
+    <nav class="nav" id="navList"></nav>
+    <div class="sidebar-foot">
+      <div class="user-chip">
+        <div class="user-avatar" id="userAvatar">S</div>
+        <div class="user-meta">
+          <div class="uname" id="userName">Sai Prasad Rodda</div>
+          <div class="urole" id="userRoleLabel">Owner</div>
+        </div>
+      </div>
+      <select id="roleSwitcher" onchange="switchRole(this.value)">
+        <option value="Owner">Switch role: Owner</option>
+        <option value="Manager">Switch role: Restaurant Manager</option>
+        <option value="Store">Switch role: Store Manager</option>
+        <option value="Chef">Switch role: Chef</option>
+      </select>
+      <button class="btn-logout" onclick="showToast('Logged out of this demo session')">Logout</button>
+    </div>
+  </aside>
+
+  <div id="main">
+    <div id="topbar">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <button id="hamburger" onclick="openSidebar()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+        </button>
+        <div class="topbar-title">
+          <h1 id="viewTitle">Dashboard</h1>
+          <div class="sub" id="viewSub">Today's performance at a glance</div>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <button class="btn" id="demoBtn" onclick="openDemoModal()">▶ Run Demo Flow</button>
+        <button class="btn btn-primary" id="primaryActionBtn">+ New Entry</button>
+      </div>
+    </div>
+
+    <div id="content">
+
+      <!-- DASHBOARD -->
+      <section class="view" id="view-dashboard">
+        <div class="help-note">Designed to work alongside existing POS systems — InventoryPro.in focuses on inventory, production and reconciliation, not order-taking.</div>
+        <div class="grid-metrics" id="dashMetrics"></div>
+        <div class="card card-pad" style="margin-bottom:18px;">
+          <div class="section-title">Needs Attention</div>
+          <div class="section-desc">Everything today that needs a decision — click any item to jump straight in.</div>
+          <div id="attentionList"></div>
+        </div>
+        <div class="two-col">
+          <div class="card card-pad">
+            <div class="section-title">Production vs POS Sales</div>
+            <div class="section-desc">Pick a dish to see how much of today's production is accounted for.</div>
+            <div class="chip-row" id="dashDishChips" style="margin-bottom:14px;"></div>
+            <div id="dashDonutArea"></div>
+          </div>
+          <div class="card card-pad">
+            <div class="section-title">Reconciliation Status</div>
+            <div class="section-desc">Every portion produced, tracked to where it went.</div>
+            <div id="dashReconStatus"></div>
+          </div>
+        </div>
+        <div class="two-col" style="margin-top:16px;">
+          <div class="card card-pad">
+            <div class="section-title">7-Day Sales &amp; Food Cost %</div>
+            <div class="section-desc">Daily sales value against food cost as a % of sales.</div>
+            <div id="dashBarChart"></div>
+          </div>
+          <div class="card card-pad">
+            <div class="section-title">Stock Value by Category</div>
+            <div class="section-desc">Where raw-material money is sitting right now.</div>
+            <div id="dashCatBars"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- INVENTORY -->
+      <section class="view" id="view-inventory">
+        <div class="page-head">
+          <div><h2>Inventory</h2><div class="desc">Live book stock across all raw materials, by category.</div></div>
+        </div>
+        <div class="search-row">
+          <input type="text" id="invSearch" placeholder="Search ingredient..." oninput="renderInventory()">
+        </div>
+        <div class="chip-row" id="invStatusChips" style="margin-bottom:8px;"></div>
+        <div class="chip-row" id="invCatChips" style="margin-bottom:14px;"></div>
+        <div class="card table-wrap">
+          <table>
+            <thead><tr>
+              <th>Ingredient</th><th>Category</th><th>Opening</th><th>Received</th><th>Issued</th><th>Consumed</th>
+              <th>Wastage</th><th>Transfers</th><th>Book Stock</th><th>Physical Stock</th><th>Variance</th><th>Status</th>
+            </tr></thead>
+            <tbody id="invTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- PURCHASE / RECEIVING -->
+      <section class="view" id="view-purchase">
+        <div class="page-head">
+          <div><h2>Raw Material Receiving</h2><div class="desc">Record incoming stock from a supplier invoice.</div></div>
+        </div>
+        <div class="two-col">
+          <div class="mobile-card" style="max-width:480px;">
+            <h3>Receive Stock</h3>
+            <form id="purchaseForm" onsubmit="submitPurchase(event)">
+              <div class="field"><label>Ingredient</label><select id="pIngredient" required></select></div>
+              <div class="field"><label>Quantity Received</label><input type="number" step="0.01" inputmode="decimal" id="pQty" class="big-input" placeholder="0" required></div>
+              <div class="field"><label>Purchase Rate (₹ per unit)</label><input type="number" step="0.01" inputmode="decimal" id="pRate" placeholder="e.g. 240" required></div>
+              <div class="field"><label>Total Amount</label><input type="text" id="pTotal" readonly style="font-weight:700;font-size:18px;"></div>
+              <div class="form-subsection">
+                <div class="form-subhead">Invoice details</div>
+                <div class="field"><label>Supplier</label><input type="text" id="pSupplier" placeholder="e.g. Fresh Farms Distributors" required></div>
+                <div class="field"><label>Invoice Number</label><input type="text" id="pInvoice" placeholder="e.g. INV-2381" required></div>
+                <div class="field"><label>Date</label><input type="date" id="pDate" required></div>
+              </div>
+              <div class="form-actions">
+                <button type="submit" class="btn btn-primary big-btn">Record Purchase</button>
+              </div>
+            </form>
+          </div>
+          <div class="card card-pad">
+            <div class="section-title">Stock Impact Preview</div>
+            <div class="section-desc">This is what happens to the ledger when you save.</div>
+            <div id="purchasePreview" class="flow-cols" style="margin-top:10px;"></div>
+            <div class="section-title" style="margin-top:18px;">Recent Receiving</div>
+            <div class="table-wrap"><table id="purchaseHistory"><thead><tr><th>Date</th><th>Ingredient</th><th>Qty</th><th>Rate</th><th>Amount</th></tr></thead><tbody></tbody></table></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- STORE ISSUE -->
+      <section class="view" id="view-issue">
+        <div class="page-head">
+          <div><h2>Issue Stock</h2><div class="desc">Move raw material from Central Store to a production department.</div></div>
+        </div>
+        <div class="two-col">
+          <div class="mobile-card">
+            <h3>Issue Stock</h3>
+            <form id="issueForm" onsubmit="submitIssue(event)">
+              <div class="field"><label>Ingredient</label><select id="iIngredient" onchange="updateIssuePreview()" required></select></div>
+              <div class="field"><label>Quantity</label><input type="number" step="0.01" inputmode="decimal" id="iQty" class="big-input" placeholder="0" oninput="updateIssuePreview()" required></div>
+              <div class="field"><label>Destination Department</label>
+                <select id="iDept" required>
+                  <option>Main Kitchen</option><option>Tandoor Section</option><option>Biryani Station</option><option>Curry Section</option>
+                </select>
+              </div>
+              <div class="field"><label>Requested By</label>
+                <select id="iRequester" required>
+                  <option>Chef Ravi</option><option>Chef Meena</option><option>Chef Suresh</option><option>Sous Chef Amit</option>
+                </select>
+              </div>
+              <div id="issuePreviewMini" class="flow-cols" style="margin-bottom:12px;"></div>
+              <button type="submit" class="btn btn-primary big-btn">Issue Stock</button>
+            </form>
+          </div>
+          <div class="card card-pad">
+            <div class="section-title">Issue Transaction History</div>
+            <div class="table-wrap"><table id="issueHistory"><thead><tr><th>Date</th><th>Ingredient</th><th>Qty</th><th>Dept</th><th>Requested By</th></tr></thead><tbody></tbody></table></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- PRODUCTION -->
+      <section class="view" id="view-production">
+        <div class="page-head">
+          <div><h2>Production</h2><div class="desc">Log a finished batch and see raw-material consumption calculated automatically.</div></div>
+        </div>
+        <div class="two-col">
+          <div class="mobile-card">
+            <h3>Today's Production</h3>
+            <form id="productionForm" onsubmit="submitProduction(event)">
+              <div class="field"><label>Dish</label><select id="prDish" onchange="updateBOMPreview()" required></select></div>
+              <div class="field"><label>Production Quantity (portions)</label><input type="number" inputmode="decimal" id="prQty" class="big-input" placeholder="0" oninput="updateBOMPreview()" required></div>
+              <div id="bomInlineSummary" class="hint" style="margin:-6px 0 14px 0;"></div>
+              <div class="field"><label>Wastage (portions)</label><input type="number" inputmode="decimal" id="prWaste" placeholder="0" value="0"></div>
+              <div class="field"><label>Shift</label><select id="prShift"><option>Lunch</option><option>Dinner</option></select></div>
+              <div class="field"><label>Chef</label>
+                <select id="prChef"><option>Chef Ravi</option><option>Chef Meena</option><option>Chef Suresh</option></select>
+              </div>
+              <button type="submit" class="btn btn-primary big-btn">Save Production</button>
+              <div class="hint" style="text-align:center;margin-top:8px;">A batch number is generated automatically when you save.</div>
+            </form>
+          </div>
+          <div class="card card-pad">
+            <div class="section-title">Expected Consumption — Live Calculation</div>
+            <div class="section-desc">Based on the dish's recipe (BOM) × production quantity.</div>
+            <div id="bomPreview"></div>
+            <div class="section-title" style="margin-top:18px;">Production Log — Today</div>
+            <div class="table-wrap"><table id="productionHistory"><thead><tr><th>Batch</th><th>Dish</th><th>Qty</th><th>Wastage</th><th>Chef</th><th>Shift</th><th></th></tr></thead><tbody></tbody></table></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- RECIPES / BOM -->
+      <section class="view" id="view-recipes">
+        <div class="page-head">
+          <div><h2>Recipes / Bill of Materials</h2><div class="desc">The standard quantity of each ingredient used per portion.</div></div>
+        </div>
+        <div class="chip-row" id="recipeDishChips" style="margin-bottom:16px;"></div>
+        <div id="recipeDetail"></div>
+      </section>
+
+      <!-- CONSUMPTION -->
+      <section class="view" id="view-consumption">
+        <div class="page-head">
+          <div><h2>Consumption Log</h2><div class="desc">Every expected-consumption calculation generated by a production batch.</div></div>
+        </div>
+        <div class="card table-wrap">
+          <table><thead><tr><th>Date</th><th>Batch</th><th>Dish</th><th>Ingredient</th><th>Formula</th><th>Expected Qty</th></tr></thead><tbody id="consumptionBody"></tbody></table>
+        </div>
+      </section>
+
+      <!-- WASTAGE -->
+      <section class="view" id="view-wastage">
+        <div class="page-head">
+          <div><h2>Wastage</h2><div class="desc">Record spoilage, overproduction, prep loss and other losses.</div></div>
+        </div>
+        <div class="two-col">
+          <div class="mobile-card">
+            <h3>Record Wastage</h3>
+            <form id="wastageForm" onsubmit="submitWastage(event)">
+              <div class="field"><label>Item Type</label>
+                <select id="wType" onchange="rebuildWasteItemOptions()"><option value="ingredient">Ingredient</option><option value="dish">Dish (finished)</option></select>
+              </div>
+              <div class="field"><label>Ingredient / Dish</label><select id="wItem" required></select></div>
+              <div class="field"><label>Quantity</label><input type="number" step="0.01" inputmode="decimal" id="wQty" class="big-input" placeholder="0" required></div>
+              <div class="field"><label>Reason</label>
+                <select id="wReason" required>
+                  <option>Spoilage</option><option>Overproduction</option><option>Preparation Loss</option><option>Burnt</option><option>Damaged</option><option>Expired</option><option>Other</option>
+                </select>
+              </div>
+              <div class="field"><label>Department</label>
+                <select id="wDept"><option>Main Kitchen</option><option>Central Store</option><option>Biryani Station</option><option>Curry Section</option></select>
+              </div>
+              <div class="field"><label>Recorded By</label><input type="text" id="wBy" placeholder="e.g. Chef Ravi" required></div>
+              <div class="field"><label>Remarks</label><textarea id="wRemarks" rows="2" placeholder="Optional"></textarea></div>
+              <button type="submit" class="btn btn-primary big-btn">Record Wastage</button>
+            </form>
+          </div>
+          <div class="card card-pad">
+            <div class="section-title">Wastage Log — Today</div>
+            <div class="section-desc" id="wastageTotalDesc"></div>
+            <div class="table-wrap"><table id="wastageHistory"><thead><tr><th>Item</th><th>Qty</th><th>Reason</th><th>Dept</th><th>Value (₹)</th></tr></thead><tbody></tbody></table></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- RECONCILIATION (POS Sales entry lives here too — one screen, one flow) -->
+      <section class="view" id="view-reconciliation">
+        <div class="page-head">
+          <div><h2>Reconciliation</h2><div class="desc">Type in what POS sold — the reconciliation status updates instantly. POS DATA is simulated for this demo.</div></div>
+        </div>
+        <div id="reconList"></div>
+      </section>
+
+      <!-- VARIANCE CENTER -->
+      <section class="view" id="view-variance">
+        <div class="page-head">
+          <div><h2>Variance Center</h2><div class="desc">Expected vs actual across ingredients, production, sales, wastage and stock.</div></div>
+        </div>
+        <div class="chip-row" id="varianceTabs" style="margin-bottom:16px;"></div>
+        <div id="varianceContent"></div>
+      </section>
+
+      <!-- REPORTS -->
+      <section class="view" id="view-reports">
+        <div class="page-head">
+          <div><h2>Reports</h2><div class="desc">Standard reports across the last 7 days of demo data.</div></div>
+        </div>
+        <div class="search-row">
+          <select id="reportType" onchange="renderReports()">
+            <option value="stock">Daily Stock</option>
+            <option value="production">Daily Production</option>
+            <option value="consumption">Daily Consumption</option>
+            <option value="wastage">Wastage</option>
+            <option value="foodcost">Food Cost</option>
+            <option value="prodsales">Production vs Sales</option>
+            <option value="variance">Variance</option>
+            <option value="purchase">Purchase</option>
+            <option value="movement">Stock Movement</option>
+          </select>
+          <select id="reportDate" onchange="renderReports()"></select>
+        </div>
+        <div class="card table-wrap"><div id="reportArea"></div></div>
+      </section>
+
+      <!-- SETTINGS -->
+      <section class="view" id="view-settings">
+        <div class="page-head"><div><h2>Settings</h2><div class="desc">Prototype configuration.</div></div></div>
+        <div class="card card-pad" style="max-width:520px;">
+          <div class="section-title">Restaurant Profile</div>
+          <div class="field"><label>Restaurant Name</label><input type="text" value="Spice Route Kitchen — Koramangala"></div>
+          <div class="field"><label>POS System</label><input type="text" value="Existing POS (connected in production)"></div>
+          <div class="field"><label>Currency</label><input type="text" value="₹ Indian Rupee"></div>
+          <div class="section-title" style="margin-top:10px;">Demo Data</div>
+          <div class="section-desc">Reset the prototype back to its original seeded state.</div>
+          <button class="btn" onclick="resetAllData()">Reset Demo Data</button>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toastWrap"></div>
+
+<div class="modal-overlay" id="demoOverlay">
+  <div class="modal">
+    <h3>Demo Flow</h3>
+    <div class="modal-desc">A guided walkthrough you can run for a restaurant owner in 2–3 minutes. This will apply real transactions to the prototype.</div>
+    <div id="demoSteps"></div>
+    <div class="form-actions" style="margin-top:16px;">
+      <button class="btn btn-primary" id="demoRunBtn" onclick="runDemoFlow()">Start Demo</button>
+      <button class="btn btn-ghost" onclick="closeDemoModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="detailOverlay">
+  <div class="modal" id="detailModalBody"></div>
+</div>
+
+<script>
+/* =========================================================================
+   KITCHENSYNC PRO — PROTOTYPE STATE & LOGIC
+   All data is demo/sample data. Persisted to localStorage for this session.
+========================================================================= */
+
+const CATEGORIES = ["Meat","Vegetables","Dairy","Dry Goods","Oil","Spices","Bakery","Other"];
+
+const NAV = [
+  {section:"Operate", items:[
+    {id:"dashboard", label:"Dashboard", roles:["Owner","Manager","Store","Chef"], icon:"grid"},
+  ]},
+  {section:"Stock", items:[
+    {id:"inventory", label:"Inventory", roles:["Owner","Manager","Store"], icon:"box"},
+    {id:"purchase", label:"Purchase", roles:["Owner","Manager","Store"], icon:"truck"},
+    {id:"issue", label:"Store Issue", roles:["Owner","Manager","Store"], icon:"arrow-right"},
+  ]},
+  {section:"Kitchen", items:[
+    {id:"production", label:"Production", roles:["Owner","Manager","Chef"], icon:"flame"},
+    {id:"recipes", label:"Recipes / BOM", roles:["Owner","Manager","Chef"], icon:"book"},
+    {id:"consumption", label:"Consumption", roles:["Owner","Manager","Chef"], icon:"list"},
+    {id:"wastage", label:"Wastage", roles:["Owner","Manager","Store","Chef"], icon:"trash"},
+  ]},
+  {section:"Sales & Control", items:[
+    {id:"reconciliation", label:"Reconciliation", roles:["Owner","Manager"], icon:"check"},
+    {id:"variance", label:"Variance", roles:["Owner","Manager"], icon:"alert"},
+    {id:"reports", label:"Reports", roles:["Owner","Manager"], icon:"chart"},
+  ]},
+  {section:"", items:[
+    {id:"settings", label:"Settings", roles:["Owner","Manager","Store","Chef"], icon:"gear"},
+  ]},
+];
+
+const ICONS = {
+  grid:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>',
+  box:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg>',
+  truck:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="6" width="13" height="11"/><path d="M14 10h4l4 4v3h-8z"/><circle cx="6" cy="19" r="2"/><circle cx="17" cy="19" r="2"/></svg>',
+  "arrow-right":'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',
+  flame:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2s-6 6-6 11a6 6 0 0012 0c0-2-1-3-1-3s-1 2-2.5 2c1-2-.5-6-2.5-10z"/></svg>',
+  book:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4.5A2.5 2.5 0 016.5 2H20v17H6.5A2.5 2.5 0 004 21.5"/><path d="M4 4.5v17"/></svg>',
+  list:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>',
+  trash:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a1 1 0 011-1h6a1 1 0 011 1v2m2 0v14a1 1 0 01-1 1H7a1 1 0 01-1-1V6"/></svg>',
+  tag:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41L11 3.83A2 2 0 009.59 3H4a1 1 0 00-1 1v5.59a2 2 0 00.59 1.41l9.58 9.59a2 2 0 002.83 0l4.59-4.59a2 2 0 000-2.83z"/><circle cx="7.5" cy="7.5" r="1.2"/></svg>',
+  check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>',
+  alert:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 20h20L12 2z"/><path d="M12 9v5M12 17h.01"/></svg>',
+  chart:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 15l4-5 3 3 5-7"/></svg>',
+  gear:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.34 1.87l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.7 1.7 0 00-1.87-.34 1.7 1.7 0 00-1 1.55V21a2 2 0 01-4 0v-.09A1.7 1.7 0 009 19.4a1.7 1.7 0 00-1.87.34l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.7 1.7 0 004.6 15a1.7 1.7 0 00-1.55-1H3a2 2 0 010-4h.09A1.7 1.7 0 004.6 9a1.7 1.7 0 00-.34-1.87l-.06-.06a2 2 0 112.83-2.83l.06.06A1.7 1.7 0 009 4.6a1.7 1.7 0 001-1.55V3a2 2 0 014 0v.09a1.7 1.7 0 001 1.55 1.7 1.7 0 001.87-.34l.06-.06a2 2 0 112.83 2.83l-.06.06A1.7 1.7 0 0019.4 9a1.7 1.7 0 001.55 1H21a2 2 0 010 4h-.09a1.7 1.7 0 00-1.51 1z"/></svg>',
+};
+
+const ROLE_NAMES = {Owner:"Sai Prasad Rodda", Manager:"Karan Mehta", Store:"Suresh Nair", Chef:"Chef Ravi"};
+
+function uid(prefix){return prefix + "-" + Math.random().toString(36).slice(2,7).toUpperCase();}
+function round1(n){return Math.round(n*10)/10;}
+function round2(n){return Math.round(n*100)/100;}
+function fmtMoney(n){return "₹" + Math.round(n).toLocaleString("en-IN");}
+function fmtNum(n,unit){return round2(n).toLocaleString("en-IN") + (unit?(" "+unit):"");}
+function todayStr(){return new Date().toISOString().slice(0,10);}
+function fmtDateLabel(d){const dt=new Date(d+"T00:00:00");return dt.toLocaleDateString("en-IN",{day:"2-digit",month:"short"});}
+
+/* ---------- Seed data ---------- */
+function seedState(){
+  const today = todayStr();
+  const days = [];
+  for(let i=6;i>=0;i--){
+    const d=new Date(); d.setDate(d.getDate()-i);
+    days.push(d.toISOString().slice(0,10));
+  }
+
+  const ingredients = [
+    {id:"ing-chicken", name:"Chicken", category:"Meat", unit:"kg", rate:240, opening:30},
+    {id:"ing-mutton", name:"Mutton", category:"Meat", unit:"kg", rate:650, opening:14},
+    {id:"ing-rice", name:"Basmati Rice", category:"Dry Goods", unit:"kg", rate:120, opening:60},
+    {id:"ing-onion", name:"Onion", category:"Vegetables", unit:"kg", rate:35, opening:40},
+    {id:"ing-tomato", name:"Tomato", category:"Vegetables", unit:"kg", rate:40, opening:22},
+    {id:"ing-paneer", name:"Paneer", category:"Dairy", unit:"kg", rate:320, opening:12},
+    {id:"ing-oil", name:"Cooking Oil", category:"Oil", unit:"L", rate:150, opening:25},
+    {id:"ing-ggp", name:"Ginger Garlic Paste", category:"Spices", unit:"kg", rate:180, opening:8},
+    {id:"ing-spices", name:"Mixed Spices", category:"Spices", unit:"kg", rate:400, opening:6},
+    {id:"ing-yogurt", name:"Yogurt", category:"Dairy", unit:"kg", rate:90, opening:10},
+    {id:"ing-butter", name:"Butter", category:"Dairy", unit:"kg", rate:480, opening:7},
+  ];
+
+  const dishes = [
+    {id:"dish-cbiryani", name:"Chicken Biryani", price:320,
+      recipe:[["ing-rice",180,"g"],["ing-chicken",180,"g"],["ing-oil",25,"ml"],["ing-onion",50,"g"],["ing-ggp",10,"g"],["ing-spices",12,"g"]]},
+    {id:"dish-mbiryani", name:"Mutton Biryani", price:420,
+      recipe:[["ing-rice",180,"g"],["ing-mutton",200,"g"],["ing-oil",25,"ml"],["ing-onion",50,"g"],["ing-ggp",12,"g"],["ing-spices",14,"g"]]},
+    {id:"dish-c65", name:"Chicken 65", price:260,
+      recipe:[["ing-chicken",200,"g"],["ing-oil",40,"ml"],["ing-ggp",8,"g"],["ing-spices",10,"g"]]},
+    {id:"dish-cfr", name:"Chicken Fried Rice", price:240,
+      recipe:[["ing-rice",200,"g"],["ing-chicken",100,"g"],["ing-oil",20,"ml"],["ing-onion",40,"g"]]},
+    {id:"dish-pbm", name:"Paneer Butter Masala", price:280,
+      recipe:[["ing-paneer",150,"g"],["ing-butter",40,"g"],["ing-tomato",100,"g"],["ing-spices",8,"g"],["ing-yogurt",30,"g"]]},
+  ];
+
+  // unit conversion to kg/L base
+  function toBase(qty,unit){ if(unit==="g"||unit==="ml") return qty/1000; return qty; }
+
+  const purchases=[], issues=[], production=[], wastage=[], consumption=[];
+  const centralStock={}, wipStock={};
+  ingredients.forEach(i=>{centralStock[i.id]=i.opening; wipStock[i.id]=0;});
+
+  // Build 6 days of history (not today) so dashboard/report history has depth
+  const histDishSales = {
+    "dish-cbiryani":[88,95,80,92,85,90], "dish-mbiryani":[40,52,48,55,50,55],
+    "dish-c65":[36,42,38,45,40,40], "dish-cfr":[28,30,26,32,29,30], "dish-pbm":[20,25,22,24,21,23]
+  };
+  const posSalesByDate={};
+  for(let d=0; d<6; d++){
+    const date = days[d];
+    posSalesByDate[date]={};
+    dishes.forEach(dish=>{
+      const qty = histDishSales[dish.id][d];
+      posSalesByDate[date][dish.id]=qty;
+      // simulate a matching production batch slightly above sales
+      const prodQty = qty + Math.round(qty*0.06) + 3;
+      const wasteQty = Math.max(1, Math.round(qty*0.02));
+      const batchId = uid("BR" + dish.id.slice(5,8).toUpperCase());
+      production.push({id:batchId, date, dish:dish.id, batch:batchId, qty:prodQty, wastage:wasteQty, chef:"Chef Ravi", shift: d%2===0?"Lunch":"Dinner"});
+      dish.recipe.forEach(([ingId, amt, unit])=>{
+        const perPortion = toBase(amt,unit);
+        const expected = perPortion*prodQty;
+        consumption.push({date, batch:batchId, dish:dish.id, ingredient:ingId, formula:`${amt}${unit} × ${prodQty}`, qty:round2(expected)});
+        centralStock[ingId] -= round2(expected*1.0); // approximate historical draw-down
+      });
+    });
+    // Restock two ingredients every day, rotated so every ingredient gets a real purchase
+    // logged against it over the week (keeps Reports > Purchase/Stock Movement consistent
+    // with the Inventory book stock).
+    const ingA = ingredients[d % ingredients.length];
+    const ingB = ingredients[(d + 6) % ingredients.length];
+    [ingA, ingB].forEach((ing, idx) => {
+      const qty = round1((12 + d*2) * (idx===0?1.3:1));
+      purchases.push({date, supplier: idx===0?"Fresh Farms Distributors":"Deccan Spice Traders", invoice:"INV-"+(2300+d*2+idx), ingredient:ing.id, qty, unit:ing.unit, rate:ing.rate, total:round1(qty*ing.rate)});
+      centralStock[ing.id]+=qty;
+    });
+    // Safety-net top-up: a real restaurant reorders before running out, so don't let any
+    // ingredient's book stock drift to zero (or negative) across the demo history just because
+    // this day's rotation above didn't happen to land on it. Every top-up is logged as a real
+    // purchase, so Inventory stays consistent with the Purchase and Stock Movement reports.
+    ingredients.forEach(ing=>{
+      const buffer = round1(ing.opening * 0.4);
+      if(centralStock[ing.id] < buffer){
+        const topUp = round1(buffer - centralStock[ing.id] + ing.opening*0.3);
+        purchases.push({date, supplier:"Fresh Farms Distributors", invoice:"INV-"+(2500+d*20+ingredients.indexOf(ing)), ingredient:ing.id, qty:topUp, unit:ing.unit, rate:ing.rate, total:round1(topUp*ing.rate)});
+        centralStock[ing.id]+=topUp;
+      }
+    });
+    // a wastage entry
+    const wIng = ingredients[(d+2)%ingredients.length];
+    wastage.push({date, type:"ingredient", item:wIng.id, qty: round1(1+d*0.3), unit:wIng.unit, reason:["Spoilage","Preparation Loss","Damaged"][d%3], dept:"Main Kitchen", by:"Chef Ravi", remarks:"", value: round1(1+d*0.3)*wIng.rate});
+  }
+
+  ingredients.forEach(i=>{ centralStock[i.id]=round1(Math.max(0,centralStock[i.id])); });
+
+  // ----- TODAY: build the exact scenario described in the brief -----
+  posSalesByDate[today]={};
+  ingredients.forEach(i=>{});
+
+  // Today's purchase: Chicken 50kg @ 240
+  purchases.push({date:today, supplier:"Fresh Farms Distributors", invoice:"INV-2381", ingredient:"ing-chicken", qty:50, unit:"kg", rate:240, total:50*240});
+  centralStock["ing-chicken"] += 50;
+
+  // small purchases for other items today to keep inventory realistic
+  purchases.push({date:today, supplier:"Deccan Spice Traders", invoice:"INV-2382", ingredient:"ing-rice", qty:40, unit:"kg", rate:120, total:40*120});
+  centralStock["ing-rice"] += 40;
+  purchases.push({date:today, supplier:"Green Valley Vegetables", invoice:"INV-2383", ingredient:"ing-onion", qty:25, unit:"kg", rate:35, total:25*35});
+  centralStock["ing-onion"] += 25;
+
+  // Today's issue: 20kg chicken to Main Kitchen for Chef Ravi
+  issues.push({date:today, ingredient:"ing-chicken", qty:20, unit:"kg", dept:"Main Kitchen", by:"Chef Ravi"});
+  centralStock["ing-chicken"] -= 20; wipStock["ing-chicken"] += 20;
+  // supporting issues for biryani batch (rice, onion, oil, ggp, spices) sized generously
+  const supportIssues = [["ing-rice",22,"kg"],["ing-onion",7,"kg"],["ing-oil",4,"L"],["ing-ggp",1.5,"kg"],["ing-spices",1.6,"kg"]];
+  supportIssues.forEach(([ingId,qty,unit])=>{
+    issues.push({date:today, ingredient:ingId, qty, unit, dept:"Main Kitchen", by:"Chef Ravi"});
+    centralStock[ingId]-=qty; wipStock[ingId]+=qty;
+  });
+
+  // Today's production: 100 Chicken Biryani, wastage 2, Chef Ravi, Lunch
+  const todayBatch = "BRY-001";
+  production.push({id:todayBatch, date:today, dish:"dish-cbiryani", batch:todayBatch, qty:100, wastage:2, chef:"Chef Ravi", shift:"Lunch"});
+  dishes[0].recipe.forEach(([ingId, amt, unit])=>{
+    const perPortion = toBase(amt,unit);
+    const expected = perPortion*100;
+    consumption.push({date:today, batch:todayBatch, dish:"dish-cbiryani", ingredient:ingId, formula:`${amt}${unit} × 100 portions`, qty:round2(expected)});
+    wipStock[ingId]-=round2(expected);
+  });
+
+  // also produce modest batches of the other dishes today for realism
+  const extraProd = [["dish-mbiryani",50,1],["dish-c65",42,1],["dish-cfr",30,0],["dish-pbm",24,1]];
+  extraProd.forEach(([dishId,qty,waste])=>{
+    const dish = dishes.find(d=>d.id===dishId);
+    const batchId = uid("BR"+dishId.slice(5,8).toUpperCase());
+    production.push({id:batchId, date:today, dish:dishId, batch:batchId, qty, wastage:waste, chef:"Chef Meena", shift:"Lunch"});
+    dish.recipe.forEach(([ingId, amt, unit])=>{
+      const perPortion = toBase(amt,unit);
+      const expected = perPortion*qty;
+      consumption.push({date:today, batch:batchId, dish:dishId, ingredient:ingId, formula:`${amt}${unit} × ${qty} portions`, qty:round2(expected)});
+      // issue what's needed (simulate store having pre-issued roughly what's needed, +/- a bit) then consume
+      if(wipStock[ingId]===undefined) wipStock[ingId]=0;
+      const alreadyIssued = wipStock[ingId];
+      if(alreadyIssued < expected){
+        const topUp = round2(expected - alreadyIssued + expected*0.05);
+        issues.push({date:today, ingredient:ingId, qty:topUp, unit: ingredients.find(i=>i.id===ingId).unit, dept:"Main Kitchen", by:"Chef Meena"});
+        centralStock[ingId]-=topUp; wipStock[ingId]+=topUp;
+      }
+      wipStock[ingId]-=round2(expected);
+    });
+  });
+
+  // Today's wastage entries: 2 portions Chicken Biryani (dish wastage already counted in production.wastage),
+  // plus one ingredient wastage entry
+  wastage.push({date:today, type:"ingredient", item:"ing-onion", qty:1.2, unit:"kg", reason:"Preparation Loss", dept:"Main Kitchen", by:"Sous Chef Amit", remarks:"Trimmed ends discarded", value: round1(1.2*35)});
+  wastage.push({date:today, type:"ingredient", item:"ing-tomato", qty:0.8, unit:"kg", reason:"Spoilage", dept:"Central Store", by:"Suresh Nair", remarks:"Overripe batch", value: round1(0.8*40)});
+
+  // Today's POS sales — Chicken Biryani matches the brief's exact reconciliation example
+  // (90 sold + 2 complimentary + 1 staff meal + 2 wastage + 5 closing stock = 100 produced).
+  // The other four dishes deliberately cover the other real-world reconciliation states so the
+  // demo shows all of them out of the box, not just the happy path:
+  posSalesByDate[today] = {
+    "dish-cbiryani":90, "dish-mbiryani":44, "dish-c65":40, "dish-cfr":26, "dish-pbm":21
+  };
+
+  ingredients.forEach(i=>{ centralStock[i.id]=round1(Math.max(0,centralStock[i.id])); wipStock[i.id]=round1(Math.max(0,wipStock[i.id]||0)); });
+
+  // One genuine seeded physical count, so the Variance Center's Stock tab has real content out of
+  // the box: Store Manager did a spot count on Onion today and found less than the book stock shows.
+  // Every other ingredient has NOT been physically counted yet, so it correctly shows no variance
+  // until someone actually records a count (see recordPhysicalCount in the Inventory screen).
+  const physicalStockAdj = { "ing-onion": round1(Math.max(0, centralStock["ing-onion"] - 2.5)) };
+
+  // Reconciliation adjustable inputs — deliberately span all three reconciliation states:
+  //  · Chicken Biryani (produced 100, accounted 100)  -> FULLY RECONCILED
+  //  · Mutton Biryani  (produced 50,  accounted 50)   -> FULLY RECONCILED
+  //  · Paneer Butter Masala (produced 24, accounted 24) -> FULLY RECONCILED
+  //  · Chicken Fried Rice (produced 30, accounted 28) -> 2 PORTIONS UNACCOUNTED (under-accounted)
+  //  · Chicken 65 (produced 42, accounted 44)         -> SOLD MORE THAN PRODUCED (over-accounted)
+  const reconInputs = {
+    "dish-cbiryani": {complimentary:2, staffMeal:1, transfers:0, closingStock:5},
+    "dish-mbiryani": {complimentary:1, staffMeal:1, transfers:0, closingStock:3},
+    "dish-c65": {complimentary:0, staffMeal:1, transfers:0, closingStock:2},
+    "dish-cfr": {complimentary:0, staffMeal:0, transfers:0, closingStock:2},
+    "dish-pbm": {complimentary:1, staffMeal:0, transfers:0, closingStock:1},
+  };
+
+  return {
+    role:"Owner",
+    days, today,
+    ingredients, dishes,
+    purchases, issues, production, wastage, consumption,
+    posSalesByDate,
+    centralStock, wipStock,
+    reconInputs,
+    physicalStockAdj, // ingredientId -> manually recorded physical count (undefined = not counted yet)
+    ui:{dashDish:"dish-cbiryani", varianceTab:"ingredient", invSearch:"", recipeDish:"dish-cbiryani"}
+  };
+}
+
+let STATE = null;
+function loadState(){
+  const raw = localStorage.getItem("ksp_state_v1");
+  if(raw){ try{ STATE = JSON.parse(raw); return; }catch(e){} }
+  STATE = seedState();
+  saveState();
+}
+function saveState(){ localStorage.setItem("ksp_state_v1", JSON.stringify(STATE)); }
+function resetAllData(){
+  localStorage.removeItem("ksp_state_v1");
+  STATE = seedState();
+  saveState();
+  renderAll();
+  showToast("Demo data reset to original scenario");
+}
+
+/* ---------- Helpers over state ---------- */
+function ingredient(id){ return STATE.ingredients.find(i=>i.id===id); }
+function dish(id){ return STATE.dishes.find(d=>d.id===id); }
+function toBaseUnit(qty,unit){ if(unit==="g"||unit==="ml") return qty/1000; return qty; }
+
+function todaysPurchases(){ return STATE.purchases.filter(p=>p.date===STATE.today); }
+function todaysIssues(){ return STATE.issues.filter(i=>i.date===STATE.today); }
+function todaysProduction(){ return STATE.production.filter(p=>p.date===STATE.today); }
+function todaysWastage(){ return STATE.wastage.filter(w=>w.date===STATE.today); }
+function todaysConsumption(){ return STATE.consumption.filter(c=>c.date===STATE.today); }
+function todaysPOS(){ return STATE.posSalesByDate[STATE.today] || {}; }
+
+function sumIngredientQtyToday(list, ingId){
+  return list.filter(x=>x.ingredient===ingId).reduce((s,x)=>s+ (x.qty||0),0);
+}
+
+function dishProducedToday(dishId){
+  return todaysProduction().filter(p=>p.dish===dishId).reduce((s,p)=>s+p.qty,0);
+}
+function dishWastageToday(dishId){
+  return todaysWastage().filter(w=>w.type==="dish" && w.item===dishId).reduce((s,w)=>s+w.qty,0)
+    + todaysProduction().filter(p=>p.dish===dishId).reduce((s,p)=>s+(p.wastage||0),0);
+}
+
+function reconFor(dishId){
+  const d = dish(dishId);
+  const produced = dishProducedToday(dishId);
+  const sold = (todaysPOS()[dishId])||0;
+  const inputs = STATE.reconInputs[dishId] || {complimentary:0,staffMeal:0,transfers:0,closingStock:0};
+  const wastageQty = dishWastageToday(dishId);
+  const accounted = sold + inputs.complimentary + inputs.staffMeal + wastageQty + inputs.transfers + inputs.closingStock;
+  const unaccounted = round1(produced - accounted);
+  return {dish:d, produced, sold, complimentary:inputs.complimentary, staffMeal:inputs.staffMeal,
+    wastage:wastageQty, transfers:inputs.transfers, closingStock:inputs.closingStock, accounted, unaccounted};
+}
+/* Three real states, not two: exactly reconciled, short (produced more than tracked — the classic
+   "unaccounted" case), or over-accounted (sold + tracked exceeds what was actually produced — sold
+   more than the kitchen made, physically impossible and usually a data-entry slip). Collapsing the
+   last two into "not <=0 so it must be fine" was hiding real problems from managers and owners. */
+function reconStatus(r){
+  if(r.unaccounted===0) return {state:"ok", badge:"badge-good", text:"FULLY RECONCILED"};
+  if(r.unaccounted>0) return {state:"short", badge:"badge-warn", text:"⚠ "+r.unaccounted+" PORTIONS UNACCOUNTED"};
+  return {state:"over", badge:"badge-bad", text:"⚠ SOLD "+Math.abs(r.unaccounted)+" MORE THAN PRODUCED — CHECK ENTRIES"};
+}
+
+function expectedConsumptionToday(ingId){
+  return round2(todaysConsumption().filter(c=>c.ingredient===ingId).reduce((s,c)=>s+c.qty,0));
+}
+function issuedToday(ingId){
+  return round2(todaysIssues().filter(i=>i.ingredient===ingId).reduce((s,i)=>s+i.qty,0));
+}
+
+function stockValue(){
+  return STATE.ingredients.reduce((s,i)=>s + (STATE.centralStock[i.id]||0)*i.rate, 0);
+}
+function todaysSalesValue(){
+  const pos = todaysPOS();
+  return STATE.dishes.reduce((s,d)=> s + (pos[d.id]||0)*d.price, 0);
+}
+function todaysFoodCost(){
+  return todaysConsumption().reduce((s,c)=>{
+    const ing = ingredient(c.ingredient);
+    return s + c.qty*(ing?ing.rate:0);
+  },0);
+}
+function todaysWastageValue(){
+  return todaysWastage().reduce((s,w)=>s+(w.value||0),0);
+}
+
+/* =========================================================================
+   RENDER: SHELL / NAV
+========================================================================= */
+function renderNav(){
+  const wrap = document.getElementById("navList");
+  wrap.innerHTML = "";
+  NAV.forEach(group=>{
+    const items = group.items.filter(it=>it.roles.includes(STATE.role));
+    if(items.length===0) return;
+    if(group.section){
+      const lab = document.createElement("div");
+      lab.className="nav-section-label"; lab.textContent=group.section;
+      wrap.appendChild(lab);
+    }
+    items.forEach(it=>{
+      const el = document.createElement("div");
+      el.className = "nav-item" + (it.id===currentView?" active":"");
+      el.innerHTML = `<span class="ic">${ICONS[it.icon]}</span><span>${it.label}</span>`;
+      el.onclick = ()=>{ navigate(it.id); closeSidebar(); };
+      wrap.appendChild(el);
+    });
+  });
+}
+
+const VIEW_META = {
+  dashboard:["Dashboard","Today's performance at a glance"],
+  inventory:["Inventory","Live book stock across all raw materials"],
+  purchase:["Raw Material Receiving","Record incoming stock from suppliers"],
+  issue:["Issue Stock","Move stock from Central Store to production"],
+  production:["Production","Log finished batches and consumption"],
+  recipes:["Recipes / BOM","Standard ingredient quantities per portion"],
+  consumption:["Consumption Log","Every BOM-calculated consumption entry"],
+  wastage:["Wastage","Record and review losses"],
+  reconciliation:["Reconciliation","Enter today's POS sales and see reconciliation update instantly — POS DATA is simulated for this demo"],
+  variance:["Variance Center","Expected vs actual, across the operation"],
+  reports:["Reports","Daily and weekly operational reports"],
+  settings:["Settings","Prototype configuration"],
+};
+
+let currentView = "dashboard";
+function navigate(view){
+  currentView = view;
+  document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
+  document.getElementById("view-"+view).classList.add("active");
+  document.getElementById("viewTitle").textContent = VIEW_META[view][0];
+  document.getElementById("viewSub").textContent = VIEW_META[view][1];
+  renderNav();
+  const renderFn = {
+    dashboard:renderDashboard, inventory:renderInventory, purchase:renderPurchase, issue:renderIssue,
+    production:renderProduction, recipes:renderRecipes, consumption:renderConsumption, wastage:renderWastage,
+    reconciliation:renderReconciliation, variance:renderVariance, reports:renderReports, settings:()=>{}
+  }[view];
+  if(renderFn) renderFn();
+  window.scrollTo(0,0);
+}
+
+function switchRole(role){
+  STATE.role = role; saveState();
+  document.getElementById("userName").textContent = ROLE_NAMES[role];
+  const roleLabel = {Owner:"Owner", Manager:"Restaurant Manager", Store:"Store Manager", Chef:"Chef"}[role];
+  document.getElementById("userRoleLabel").textContent = roleLabel;
+  document.getElementById("userAvatar").textContent = ROLE_NAMES[role][0];
+  renderNav();
+  updateTopbarForRole();
+  // if current view not permitted for role, bounce to dashboard
+  const allowed = NAV.flatMap(g=>g.items).find(it=>it.id===currentView && it.roles.includes(role));
+  navigate(allowed ? currentView : "dashboard");
+  showToast("Switched to " + roleLabel + " view");
+}
+
+/* Each role's single most common action lives front and center in the topbar,
+   instead of one generic "+ New Entry" that means nothing to 3 of the 4 roles. */
+const ROLE_PRIMARY_ACTION = {
+  Owner:  {label:"Investigate Variance", view:"variance"},
+  Manager:{label:"Reconcile Today's Sales", view:"reconciliation"},
+  Store:  {label:"Receive Stock", view:"purchase"},
+  Chef:   {label:"Log Production", view:"production"},
+};
+function updateTopbarForRole(){
+  const cfg = ROLE_PRIMARY_ACTION[STATE.role];
+  const btn = document.getElementById("primaryActionBtn");
+  btn.textContent = "+ " + cfg.label;
+  btn.onclick = ()=>navigate(cfg.view);
+  // Demo Flow is a sales-pitch tool for owners/managers, not part of daily store/kitchen work
+  document.getElementById("demoBtn").style.display = (STATE.role==="Owner"||STATE.role==="Manager") ? "inline-flex" : "none";
+}
+
+function openSidebar(){ document.getElementById("sidebar").classList.add("open"); document.getElementById("scrim").classList.add("show"); }
+function closeSidebar(){ document.getElementById("sidebar").classList.remove("open"); document.getElementById("scrim").classList.remove("show"); }
+
+function showToast(msg){
+  const wrap = document.getElementById("toastWrap");
+  const el = document.createElement("div");
+  el.className="toast"; el.innerHTML = `<span class="dot"></span><span>${msg}</span>`;
+  wrap.appendChild(el);
+  setTimeout(()=>{ el.style.opacity="0"; el.style.transition="opacity .3s"; setTimeout(()=>el.remove(),300); }, 2600);
+}
+
+/* =========================================================================
+   RENDER: DASHBOARD
+========================================================================= */
+function renderDashboard(){
+  const metrics = document.getElementById("dashMetrics");
+  const sales = todaysSalesValue();
+  const foodCost = todaysFoodCost();
+  const foodCostPct = sales>0 ? round1((foodCost/sales)*100) : 0;
+  const stockVal = stockValue();
+  const prodPortions = todaysProduction().reduce((s,p)=>s+p.qty,0);
+  const wastagePortionsVal = todaysWastageValue();
+  const totalUnaccounted = STATE.dishes.reduce((s,d)=>s + Math.abs(reconFor(d.id).unaccounted), 0);
+  const stockVarianceCount = STATE.ingredients.filter(i=>invRow(i.id).status!=="Normal").length;
+
+  const cards = [
+    {label:"Today's Sales", value: fmtMoney(sales), sub: STATE.dishes.reduce((s,d)=>s+((todaysPOS()[d.id])||0),0)+" portions sold", cls:""},
+    {label:"Food Cost %", value: foodCostPct+"%", sub: foodCostPct<=32 ? "Within target (≤32%)" : "Above target — review", cls: foodCostPct<=32?"good":"warn"},
+    {label:"Raw Material Stock Value", value: fmtMoney(stockVal), sub: STATE.ingredients.length+" ingredients tracked", cls:""},
+    {label:"Today's Production", value: prodPortions+" portions", sub: todaysProduction().length+" batches logged", cls:""},
+    {label:"Today's Wastage", value: fmtMoney(wastagePortionsVal), sub: todaysWastage().length+" entries recorded", cls: wastagePortionsVal>1500?"warn":""},
+    {label:"Production vs Sales", value: prodPortions + " / " + STATE.dishes.reduce((s,d)=>s+((todaysPOS()[d.id])||0),0), sub:"produced / sold", cls:""},
+    {label:"Stock Variance", value: stockVarianceCount + " items", sub: stockVarianceCount>0 ? "need physical count review" : "all normal", cls: stockVarianceCount>0?"warn":"good",
+      click:"jumpToVarianceTab('stock')", goto: stockVarianceCount>0 ? "Investigate →" : ""},
+    {label:"Unexplained Variance", value: totalUnaccounted + " portions", sub: totalUnaccounted>0 ? "review required" : "fully reconciled", cls: totalUnaccounted>0?"bad":"good",
+      click:"navigate('reconciliation')", goto: totalUnaccounted>0 ? "Reconcile now →" : ""},
+  ];
+  metrics.innerHTML = cards.map(c=>`
+    <div class="metric-card ${c.click?'m-click':''}" ${c.click?`onclick="${c.click}"`:""}>
+      <div class="m-label">${c.label}</div>
+      <div class="m-value">${c.value}</div>
+      <div class="m-sub ${c.cls}">${c.sub}</div>
+      ${c.goto?`<div class="m-goto">${c.goto}</div>`:""}
+    </div>`).join("");
+
+  renderAttentionList();
+
+  // dish chips
+  const chipWrap = document.getElementById("dashDishChips");
+  chipWrap.innerHTML = STATE.dishes.map(d=>`<div class="chip ${d.id===STATE.ui.dashDish?'active':''}" onclick="setDashDish('${d.id}')">${d.name}</div>`).join("");
+
+  renderDashDonut();
+  renderDashReconStatus();
+  renderDashBarChart();
+  renderDashCatBars();
+}
+function setDashDish(id){ STATE.ui.dashDish=id; saveState(); renderDashboard(); }
+
+function donutSVG(segments, size){
+  // segments: [{value,color,label}]
+  size = size||160;
+  const r = size/2 - 14, cx=size/2, cy=size/2, circ = 2*Math.PI*r;
+  const total = segments.reduce((s,x)=>s+Math.max(0,x.value),0) || 1;
+  let offset = 0;
+  let circles = "";
+  segments.forEach(seg=>{
+    const frac = Math.max(0,seg.value)/total;
+    const dash = frac*circ;
+    circles += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${seg.color}" stroke-width="20"
+      stroke-dasharray="${dash} ${circ-dash}" stroke-dashoffset="${-offset}" transform="rotate(-90 ${cx} ${cy})"/>`;
+    offset += dash;
+  });
+  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#E7E3D8" stroke-width="20"/>
+    ${circles}
+  </svg>`;
+}
+
+function renderDashDonut(){
+  const r = reconFor(STATE.ui.dashDish);
+  const remaining = Math.max(0, r.produced - r.sold);
+  const segs = [
+    {value:r.sold, color:"#2F6F62", label:"POS Sold"},
+    {value:remaining, color:"#B5710A", label:"Remaining"},
+  ];
+  document.getElementById("dashDonutArea").innerHTML = `
+    <div class="donut-wrap">
+      ${donutSVG(segs,150)}
+      <div class="donut-legend">
+        <div class="row"><span class="sw" style="background:#2F6F62"></span>POS Sold<span class="val">${r.sold}</span></div>
+        <div class="row"><span class="sw" style="background:#B5710A"></span>Remaining<span class="val">${remaining}</span></div>
+        <div class="row" style="border-top:1px solid var(--border-soft);padding-top:8px;"><span class="sw" style="background:#23261F"></span>Produced<span class="val">${r.produced}</span></div>
+      </div>
+    </div>`;
+}
+
+function renderDashReconStatus(){
+  const r = reconFor(STATE.ui.dashDish);
+  const st = reconStatus(r);
+  const bg = st.state==="ok" ? "var(--good-soft)" : st.state==="short" ? "var(--warn-soft)" : "var(--bad-soft)";
+  document.getElementById("dashReconStatus").innerHTML = `
+    <div class="recon-card" style="background:${bg};border-color:transparent;">
+      <div class="recon-head"><div class="dish">${r.dish.name}</div>
+        <span class="badge ${st.badge}">${st.text}</span>
+      </div>
+      <table style="background:transparent;">
+        <tbody>
+          <tr><td>POS Sold</td><td style="text-align:right;font-weight:700;">${r.sold}</td></tr>
+          <tr><td>Complimentary</td><td style="text-align:right;font-weight:700;">${r.complimentary}</td></tr>
+          <tr><td>Staff Meal</td><td style="text-align:right;font-weight:700;">${r.staffMeal}</td></tr>
+          <tr><td>Wastage</td><td style="text-align:right;font-weight:700;">${round1(r.wastage)}</td></tr>
+          <tr><td>Closing Stock</td><td style="text-align:right;font-weight:700;">${r.closingStock}</td></tr>
+          <tr><td style="font-weight:700;">Total Accounted</td><td style="text-align:right;font-weight:700;">${round1(r.accounted)} / ${r.produced}</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="hint" style="margin-top:4px;">Adjust complimentary, staff meal and closing stock counts in the <a href="#" onclick="navigate('reconciliation');return false;" style="color:var(--accent);font-weight:700;">Reconciliation</a> screen.</div>
+  `;
+}
+
+function renderDashBarChart(){
+  const days = STATE.days;
+  const salesByDay = days.map(d=>{
+    const pos = STATE.posSalesByDate[d]||{};
+    return STATE.dishes.reduce((s,dish)=>s+((pos[dish.id]||0)*dish.price),0);
+  });
+  const costByDay = days.map(d=>{
+    return STATE.consumption.filter(c=>c.date===d).reduce((s,c)=>{const ing=ingredient(c.ingredient); return s+c.qty*(ing?ing.rate:0);},0);
+  });
+  const pctByDay = salesByDay.map((s,i)=> s>0 ? round1((costByDay[i]/s)*100) : 0);
+  const maxSales = Math.max(...salesByDay,1);
+  const w=520,h=190,padL=40,padB=26,barGap=14;
+  const bw = (w-padL-10)/days.length - barGap;
+  let bars="", labels="", pctLine="";
+  const pts=[];
+  days.forEach((d,i)=>{
+    const x = padL + i*((w-padL-10)/days.length) + barGap/2;
+    const barH = (salesByDay[i]/maxSales)*(h-padB-14);
+    const y = h-padB-barH;
+    bars += `<rect x="${x}" y="${y}" width="${bw}" height="${barH}" rx="3" fill="${d===STATE.today?'#A84B23':'#E4DECF'}"/>`;
+    labels += `<text x="${x+bw/2}" y="${h-8}" font-size="10" fill="#9A9C8E" text-anchor="middle">${fmtDateLabel(d)}</text>`;
+    const py = h-padB - (pctByDay[i]/50)*(h-padB-14);
+    pts.push([x+bw/2, Math.max(10,py)]);
+  });
+  const line = pts.map((p,i)=> (i===0?"M":"L")+p[0]+","+p[1]).join(" ");
+  const dots = pts.map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="3.5" fill="#2F6F62"/>`).join("");
+  document.getElementById("dashBarChart").innerHTML = `
+    <svg width="100%" viewBox="0 0 ${w} ${h}" style="max-width:560px;">
+      ${bars}${labels}
+      <path d="${line}" fill="none" stroke="#2F6F62" stroke-width="2"/>
+      ${dots}
+    </svg>
+    <div class="recon-legend" style="margin-top:6px;">
+      <span><i style="background:#A84B23"></i>Sales value (₹) — bars</span>
+      <span><i style="background:#2F6F62"></i>Food cost % — line</span>
+    </div>`;
+}
+
+function invRow(ingId){
+  const i = ingredient(ingId);
+  const received = todaysPurchases().filter(p=>p.ingredient===ingId).reduce((s,p)=>s+p.qty,0);
+  const issued = issuedToday(ingId);
+  const consumed = expectedConsumptionToday(ingId);
+  const wastageQty = todaysWastage().filter(w=>w.type==="ingredient" && w.item===ingId).reduce((s,w)=>s+w.qty,0);
+  const book = round1(STATE.centralStock[ingId]||0);
+  // Physical stock only differs from book stock when someone has actually recorded a physical count
+  // (STATE.physicalStockAdj). No count taken yet = no variance to report — fabricating a phantom
+  // shrinkage number here would mislead an owner into thinking a count happened when it didn't.
+  const hasCount = STATE.physicalStockAdj[ingId] !== undefined;
+  const physical = hasCount ? round1(STATE.physicalStockAdj[ingId]) : book;
+  const variance = round1(physical-book);
+  let status = "Normal";
+  if(hasCount){
+    if(Math.abs(variance) > book*0.05 && Math.abs(variance)>=1) status="Review";
+    if(Math.abs(variance) > book*0.1 && Math.abs(variance)>=2) status="Critical";
+  }
+  return {ingredient:i, opening:i.opening, received, issued, consumed, wastage: round1(wastageQty), transfers:0, book, physical, variance, status, hasCount};
+}
+
+function renderDashCatBars(){
+  const byCat = {};
+  CATEGORIES.forEach(c=>byCat[c]=0);
+  STATE.ingredients.forEach(i=>{ byCat[i.category]+= (STATE.centralStock[i.id]||0)*i.rate; });
+  const max = Math.max(...Object.values(byCat),1);
+  document.getElementById("dashCatBars").innerHTML = CATEGORIES.filter(c=>byCat[c]>0).map(c=>{
+    const pct = (byCat[c]/max)*100;
+    return `<div style="margin-bottom:10px;">
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;"><span>${c}</span><span style="font-weight:700;">${fmtMoney(byCat[c])}</span></div>
+      <div style="background:var(--border-soft);border-radius:99px;height:8px;"><div style="width:${pct}%;background:var(--accent-2);height:8px;border-radius:99px;"></div></div>
+    </div>`;
+  }).join("");
+}
+
+function computeAttentionItems(){
+  const items = [];
+  // 1. Dishes that don't reconcile — either short (produced more than tracked) or
+  //    over-accounted (sold more than produced) -> reconciliation
+  STATE.dishes.forEach(d=>{
+    const r = reconFor(d.id);
+    if(r.unaccounted>0){
+      items.push({sev:"bad", label:d.name, detail:r.unaccounted+" portions unaccounted — review required",
+        action:`focusRecon('${d.id}')`});
+    } else if(r.unaccounted<0){
+      items.push({sev:"bad", label:d.name, detail:"Sold "+Math.abs(r.unaccounted)+" more than produced — check entries",
+        action:`focusRecon('${d.id}')`});
+    }
+  });
+  // 2. Ingredients with stock variance (book vs physical) -> Variance Center, Stock tab
+  STATE.ingredients.forEach(i=>{
+    const row = invRow(i.id);
+    if(row.status!=="Normal"){
+      items.push({sev:row.status==="Critical"?"bad":"warn", label:i.name,
+        detail:"Stock variance "+(row.variance>0?"+":"")+fmtNum(row.variance,i.unit)+" — "+row.status.toLowerCase(),
+        action:`jumpToVarianceTab('stock')`});
+    }
+  });
+  // 3. Ingredients with issued-vs-expected variance -> ingredient detail modal directly
+  STATE.ingredients.forEach(i=>{
+    const expected = expectedConsumptionToday(i.id);
+    const actual = issuedToday(i.id);
+    if(expected>0 || actual>0){
+      const variance = round2(actual-expected);
+      const pct = expected>0 ? Math.abs(variance)/expected*100 : 0;
+      if(pct>5){
+        const detail = variance<0
+          ? "Kitchen used "+fmtNum(Math.abs(variance),i.unit)+" that was never issued from store"
+          : "Issued "+fmtNum(variance,i.unit)+" more than the kitchen used so far";
+        items.push({sev: variance<0 ? (pct>15?"bad":"warn") : "warn", label:i.name, detail, sortMag: Math.abs(variance),
+          action:`showIngredientVarianceDetail('${i.id}')`});
+      }
+    }
+  });
+  // Sort worst-first (bad before warn), and cap the list so a busy day doesn't bury the owner
+  // in a wall of ingredient noise — anything beyond the top 6 is one click away in Variance Center.
+  items.sort((a,b)=> (a.sev==="bad"?0:1) - (b.sev==="bad"?0:1));
+  const overflow = items.length - 6;
+  const shown = items.slice(0,6);
+  if(overflow>0){
+    shown.push({sev:"warn", label:`+${overflow} more item${overflow>1?'s':''}`, detail:"Open the Variance Center to see everything",
+      action:`navigate('variance')`, isOverflow:true});
+  }
+  return shown;
+}
+function renderAttentionList(){
+  const items = computeAttentionItems();
+  const wrap = document.getElementById("attentionList");
+  if(!wrap) return;
+  if(items.length===0){
+    wrap.innerHTML = `<div class="attn-empty">✓ Nothing needs review right now — everything's reconciled and within normal variance.</div>`;
+    return;
+  }
+  wrap.innerHTML = items.map(it=>`
+    <div class="attn-item" onclick="${it.action}">
+      <div class="a-left">
+        <span class="a-dot ${it.isOverflow?'':it.sev}" style="${it.isOverflow?'background:var(--ink-faint);':''}"></span>
+        <div>
+          <div class="a-label">${it.label}</div>
+          <div class="a-detail">${it.detail}</div>
+        </div>
+      </div>
+      <span class="chev">→</span>
+    </div>`).join("");
+}
+function focusRecon(dishId){
+  navigate("reconciliation");
+  setTimeout(()=>{
+    const el = document.getElementById("recon-"+dishId);
+    if(el){ el.scrollIntoView({behavior:"smooth", block:"center"}); el.classList.add("flash"); setTimeout(()=>el.classList.remove("flash"),1600); }
+  }, 60);
+}
+function jumpToVarianceTab(tab, ingId){
+  STATE.ui.varianceTab = tab; saveState();
+  navigate("variance");
+  if(ingId) setTimeout(()=>showIngredientVarianceDetail(ingId), 80);
+}
+
+/* =========================================================================
+   RENDER: INVENTORY
+========================================================================= */
+function setInvStatus(v){ STATE.ui.invStatus=v; saveState(); renderInventory(); }
+function setInvCat(v){ STATE.ui.invCat=v; saveState(); renderInventory(); }
+function renderInventory(){
+  if(STATE.ui.invStatus===undefined) STATE.ui.invStatus="";
+  if(STATE.ui.invCat===undefined) STATE.ui.invCat="";
+  const statusOpts = ["","Normal","Review","Critical"];
+  document.getElementById("invStatusChips").innerHTML = statusOpts.map(s=>
+    `<div class="chip ${STATE.ui.invStatus===s?'active':''}" onclick="setInvStatus('${s}')">${s||"All statuses"}</div>`).join("");
+  document.getElementById("invCatChips").innerHTML = ["",...CATEGORIES].map(c=>
+    `<div class="chip ${STATE.ui.invCat===c?'active':''}" onclick="setInvCat('${c}')">${c||"All categories"}</div>`).join("");
+  const search = document.getElementById("invSearch").value.toLowerCase();
+  const cat = STATE.ui.invCat;
+  const status = STATE.ui.invStatus;
+  const rows = STATE.ingredients.map(i=>invRow(i.id)).filter(r=>{
+    if(search && !r.ingredient.name.toLowerCase().includes(search)) return false;
+    if(cat && r.ingredient.category!==cat) return false;
+    if(status && r.status!==status) return false;
+    return true;
+  });
+  const badgeCls = {Normal:"badge-good", Review:"badge-warn", Critical:"badge-bad"};
+  document.getElementById("invTableBody").innerHTML = rows.length ? rows.map(r=>`
+    <tr>
+      <td style="font-weight:600;">${r.ingredient.name}</td>
+      <td><span class="pill-cat">${r.ingredient.category}</span></td>
+      <td>${fmtNum(r.opening,r.ingredient.unit)}</td>
+      <td>${fmtNum(r.received,r.ingredient.unit)}</td>
+      <td>${fmtNum(r.issued,r.ingredient.unit)}</td>
+      <td>${fmtNum(r.consumed,r.ingredient.unit)}</td>
+      <td>${fmtNum(r.wastage,r.ingredient.unit)}</td>
+      <td>${fmtNum(r.transfers,r.ingredient.unit)}</td>
+      <td style="font-weight:700;">${fmtNum(r.book,r.ingredient.unit)}</td>
+      <td>${r.hasCount
+          ? `${fmtNum(r.physical,r.ingredient.unit)} <button class="link-btn" style="margin-left:4px;" onclick="recordPhysicalCount('${r.ingredient.id}')">edit</button>`
+          : `<span style="color:var(--ink-faint);">Not counted</span> <button class="link-btn" style="margin-left:4px;" onclick="recordPhysicalCount('${r.ingredient.id}')">record</button>`}</td>
+      <td style="color:${r.variance<0?'var(--bad)':r.variance>0?'var(--good)':'var(--ink-dim)'};font-weight:700;">${r.hasCount ? (r.variance>0?'+':'')+fmtNum(r.variance,r.ingredient.unit) : '—'}</td>
+      <td><span class="badge ${badgeCls[r.status]}">${r.status}</span></td>
+    </tr>`).join("") : `<tr><td colspan="12"><div class="empty-note">No ingredients match your filters.</div></td></tr>`;
+}
+function recordPhysicalCount(ingId){
+  const ing = ingredient(ingId);
+  const current = STATE.physicalStockAdj[ingId] !== undefined ? STATE.physicalStockAdj[ingId] : STATE.centralStock[ingId];
+  const val = window.prompt(`Physical stock count for ${ing.name} (${ing.unit}):`, round1(current));
+  if(val===null) return;
+  const num = parseFloat(val);
+  if(isNaN(num) || num<0){ showToast("Enter a valid quantity"); return; }
+  STATE.physicalStockAdj[ingId] = num;
+  saveState();
+  showToast("Physical count recorded for " + ing.name);
+  renderInventory();
+  if(currentView==="dashboard") renderDashboard();
+}
+
+/* =========================================================================
+   RENDER: PURCHASE / RECEIVING
+========================================================================= */
+function renderPurchase(){
+  const sel = document.getElementById("pIngredient");
+  sel.innerHTML = STATE.ingredients.map(i=>`<option value="${i.id}">${i.name} (${i.unit})</option>`).join("");
+  document.getElementById("pDate").value = STATE.today;
+  updatePurchasePreview();
+  ["pQty","pRate"].forEach(id=>document.getElementById(id).oninput = updatePurchasePreview);
+  sel.onchange = updatePurchasePreview;
+  renderPurchaseHistory();
+}
+function updatePurchasePreview(){
+  const ingId = document.getElementById("pIngredient").value;
+  const qty = parseFloat(document.getElementById("pQty").value)||0;
+  const rate = parseFloat(document.getElementById("pRate").value)||0;
+  document.getElementById("pTotal").value = qty && rate ? fmtMoney(qty*rate) : "";
+  const ing = ingredient(ingId);
+  const prev = STATE.centralStock[ingId]||0;
+  document.getElementById("purchasePreview").innerHTML = ing ? `
+    <div class="flow-box"><div class="flabel">PREVIOUS STOCK</div><div class="fval">${fmtNum(prev)}</div><div class="funit">${ing.unit}</div></div>
+    <div class="flow-arrow">+</div>
+    <div class="flow-box"><div class="flabel">RECEIVED</div><div class="fval">${fmtNum(qty)}</div><div class="funit">${ing.unit}</div></div>
+    <div class="flow-arrow">=</div>
+    <div class="flow-box" style="grid-column:1/-1;background:var(--accent-soft);border-style:solid;border-color:var(--accent);">
+      <div class="flabel">CURRENT BOOK STOCK</div><div class="fval">${fmtNum(prev+qty)}</div><div class="funit">${ing.unit}</div>
+    </div>` : "";
+}
+function submitPurchase(e){
+  e.preventDefault();
+  const ingId = document.getElementById("pIngredient").value;
+  const qty = parseFloat(document.getElementById("pQty").value);
+  const rate = parseFloat(document.getElementById("pRate").value);
+  const ing = ingredient(ingId);
+  STATE.purchases.push({date:STATE.today, supplier:document.getElementById("pSupplier").value, invoice:document.getElementById("pInvoice").value,
+    ingredient:ingId, qty, unit:ing.unit, rate, total:qty*rate});
+  STATE.centralStock[ingId] = round1((STATE.centralStock[ingId]||0)+qty);
+  saveState();
+  showToast("Purchase recorded — " + ing.name + " stock updated");
+  resetPurchaseForm();
+  renderPurchase();
+  renderInventory();
+}
+function resetPurchaseForm(){
+  document.getElementById("purchaseForm").reset();
+  document.getElementById("pDate").value = STATE.today;
+  document.getElementById("pTotal").value="";
+  updatePurchasePreview();
+}
+function renderPurchaseHistory(){
+  const rows = [...STATE.purchases].filter(p=>p.date===STATE.today).reverse().concat([...STATE.purchases].filter(p=>p.date!==STATE.today).reverse()).slice(0,12);
+  document.querySelector("#purchaseHistory tbody").innerHTML = rows.map(p=>`
+    <tr><td>${fmtDateLabel(p.date)}</td><td>${ingredient(p.ingredient).name}</td><td>${fmtNum(p.qty,p.unit)}</td><td>${fmtMoney(p.rate)}</td><td>${fmtMoney(p.total)}</td></tr>
+  `).join("") || `<tr><td colspan="5"><div class="empty-note">No purchases yet.</div></td></tr>`;
+}
+
+/* =========================================================================
+   RENDER: STORE ISSUE
+========================================================================= */
+function renderIssue(){
+  const sel = document.getElementById("iIngredient");
+  sel.innerHTML = STATE.ingredients.map(i=>`<option value="${i.id}">${i.name} (${i.unit}) — ${fmtNum(STATE.centralStock[i.id])} in store</option>`).join("");
+  updateIssuePreview();
+  renderIssueHistory();
+}
+function updateIssuePreview(){
+  const ingId = document.getElementById("iIngredient").value;
+  const qty = parseFloat(document.getElementById("iQty").value)||0;
+  const ing = ingredient(ingId);
+  if(!ing) return;
+  const central = STATE.centralStock[ingId]||0;
+  const wip = STATE.wipStock[ingId]||0;
+  const over = qty>central;
+  document.getElementById("issuePreviewMini").innerHTML = `
+    <div class="flow-box" style="${over?'border-color:var(--bad);':''}"><div class="flabel">CENTRAL STORE</div><div class="fval">${fmtNum(central)}</div><div class="funit">→ ${fmtNum(Math.max(0,central-qty))} ${ing.unit}</div></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box"><div class="flabel">KITCHEN / WIP</div><div class="fval">${fmtNum(wip)}</div><div class="funit">→ ${fmtNum(wip+qty)} ${ing.unit}</div></div>
+    ${over?`<div style="grid-column:1/-1;color:var(--bad);font-size:12px;font-weight:600;">⚠ Requested quantity exceeds current central store stock.</div>`:""}
+  `;
+}
+function submitIssue(e){
+  e.preventDefault();
+  const ingId = document.getElementById("iIngredient").value;
+  const qty = parseFloat(document.getElementById("iQty").value);
+  const ing = ingredient(ingId);
+  STATE.issues.push({date:STATE.today, ingredient:ingId, qty, unit:ing.unit, dept:document.getElementById("iDept").value, by:document.getElementById("iRequester").value});
+  STATE.centralStock[ingId] = round1(Math.max(0,(STATE.centralStock[ingId]||0)-qty));
+  STATE.wipStock[ingId] = round1((STATE.wipStock[ingId]||0)+qty);
+  saveState();
+  showToast("Stock issued successfully");
+  document.getElementById("issueForm").reset();
+  renderIssue();
+  renderInventory();
+}
+function renderIssueHistory(){
+  const rows = [...STATE.issues].reverse().slice(0,14);
+  document.querySelector("#issueHistory tbody").innerHTML = rows.map(i=>`
+    <tr><td>${fmtDateLabel(i.date)}</td><td>${ingredient(i.ingredient).name}</td><td>${fmtNum(i.qty,i.unit)}</td><td>${i.dept}</td><td>${i.by}</td></tr>
+  `).join("") || `<tr><td colspan="5"><div class="empty-note">No issues recorded yet.</div></td></tr>`;
+}
+
+/* =========================================================================
+   RENDER: PRODUCTION
+========================================================================= */
+function renderProduction(){
+  const sel = document.getElementById("prDish");
+  sel.innerHTML = STATE.dishes.map(d=>`<option value="${d.id}">${d.name}</option>`).join("");
+  // auto-default Chef to whoever is logged in, and Shift to the current time of day —
+  // one less thing to pick every single time a batch is logged
+  const chefSel = document.getElementById("prChef");
+  if(STATE.role==="Chef" && [...chefSel.options].some(o=>o.value===ROLE_NAMES.Chef)) chefSel.value = ROLE_NAMES.Chef;
+  document.getElementById("prShift").value = new Date().getHours() < 16 ? "Lunch" : "Dinner";
+  updateBOMPreview();
+  renderProductionHistory();
+}
+function updateBOMPreview(){
+  const dishId = document.getElementById("prDish").value;
+  const d = dish(dishId);
+  const qty = parseFloat(document.getElementById("prQty").value)||0;
+  if(!d) return;
+  // Flag any ingredient where the kitchen doesn't have enough already-issued stock (WIP) to
+  // cover this batch — mirrors the same warning pattern used on the Issue Stock screen, so a
+  // chef sees it before saving instead of finding out later as a variance flag on someone else's dashboard.
+  const shortfalls = [];
+  if(qty>0){
+    d.recipe.forEach(([ingId,amt,unit])=>{
+      const need = toBaseUnit(amt,unit)*qty;
+      const have = STATE.wipStock[ingId]||0;
+      if(need > have + 0.001){
+        shortfalls.push({name:ingredient(ingId).name, short:round2(need-have), unit:ingredient(ingId).unit});
+      }
+    });
+  }
+  document.getElementById("bomPreview").innerHTML = `
+    ${shortfalls.length ? `<div style="background:var(--warn-soft);color:#7A4E07;border-radius:8px;padding:10px 12px;font-size:12.5px;margin-bottom:12px;">
+      ⚠ Not enough stock issued to the kitchen yet for: ${shortfalls.map(s=>`${s.name} (short ${fmtNum(s.short,s.unit)})`).join(", ")}.
+      You can still save — but consider issuing more stock first, or this will show up as a variance later.
+    </div>` : ""}
+    <div class="table-wrap"><table>
+      <thead><tr><th>Ingredient</th><th>Per Portion</th><th>× ${qty||0} portions</th><th>Expected Consumption</th></tr></thead>
+      <tbody>
+      ${d.recipe.map(([ingId,amt,unit])=>{
+        const ing = ingredient(ingId);
+        const total = toBaseUnit(amt,unit)*qty;
+        return `<tr><td>${ing.name}</td><td>${amt}${unit}</td><td>× ${qty||0}</td><td style="font-weight:700;">${qty? fmtNum(round2(total),ing.unit): '—'}</td></tr>`;
+      }).join("")}
+      </tbody>
+    </table></div>
+    <div class="hint">Formula: recipe quantity per portion × production quantity, converted to ${d.recipe.some(r=>r[2]==="g"||r[2]==="ml")?'kg / L':'the base unit'}.</div>
+  `;
+  // compact inline echo so a chef on a phone sees the calculation right under the quantity field,
+  // without scrolling away from the form to the card below
+  const summaryEl = document.getElementById("bomInlineSummary");
+  if(summaryEl){
+    if(!qty){ summaryEl.textContent = ""; }
+    else{
+      const parts = d.recipe.map(([ingId,amt,unit])=>{
+        const ing = ingredient(ingId);
+        return fmtNum(round2(toBaseUnit(amt,unit)*qty),ing.unit) + " " + ing.name;
+      });
+      const shown = parts.slice(0,2).join(", ");
+      const more = parts.length>2 ? ` +${parts.length-2} more` : "";
+      summaryEl.innerHTML = shortfalls.length
+        ? `<span style="color:var(--warn);font-weight:600;">⚠ ${shortfalls.length} ingredient${shortfalls.length>1?'s':''} short in kitchen stock</span> — see full breakdown on the right.`
+        : `Uses: <b>${shown}</b>${more} — full breakdown is on the right.`;
+    }
+  }
+}
+function submitProduction(e){
+  e.preventDefault();
+  const dishId = document.getElementById("prDish").value;
+  const d = dish(dishId);
+  const qty = parseFloat(document.getElementById("prQty").value);
+  const waste = parseFloat(document.getElementById("prWaste").value)||0;
+  const batch = uid("BR"+dishId.slice(5,8).toUpperCase());
+  const chef = document.getElementById("prChef").value;
+  const shift = document.getElementById("prShift").value;
+  STATE.production.push({id:batch, date:STATE.today, dish:dishId, batch, qty, wastage:waste, chef, shift});
+  d.recipe.forEach(([ingId,amt,unit])=>{
+    const expected = round2(toBaseUnit(amt,unit)*qty);
+    STATE.consumption.push({date:STATE.today, batch, dish:dishId, ingredient:ingId, formula:`${amt}${unit} × ${qty} portions`, qty:expected});
+    STATE.wipStock[ingId] = round2((STATE.wipStock[ingId]||0) - expected);
+  });
+  saveState();
+  showToast("Production batch saved — " + batch);
+  document.getElementById("productionForm").reset();
+  renderProduction();
+  renderInventory();
+}
+function renderProductionHistory(){
+  const rows = [...todaysProduction()].reverse();
+  document.querySelector("#productionHistory tbody").innerHTML = rows.map(p=>`
+    <tr><td>${p.batch}</td><td>${dish(p.dish).name}</td><td>${p.qty}</td><td>${p.wastage}</td><td>${p.chef}</td><td>${p.shift}</td>
+    <td><button class="btn btn-sm btn-ghost" onclick="showConsumptionDetail('${p.batch}')">View Consumption</button></td></tr>
+  `).join("") || `<tr><td colspan="7"><div class="empty-note">No production logged today yet.</div></td></tr>`;
+}
+function showConsumptionDetail(batch){
+  const rows = STATE.consumption.filter(c=>c.batch===batch);
+  const prod = STATE.production.find(p=>p.batch===batch);
+  document.getElementById("detailModalBody").innerHTML = `
+    <h3>Consumption — ${batch}</h3>
+    <div class="modal-desc">${dish(prod.dish).name} · ${prod.qty} portions · ${prod.chef}</div>
+    <div class="consump-detail table-wrap"><table>
+      <thead><tr><th>Ingredient</th><th>Formula</th><th>Expected Qty</th></tr></thead>
+      <tbody>${rows.map(r=>`<tr><td>${ingredient(r.ingredient).name}</td><td>${r.formula}</td><td style="font-weight:700;">${fmtNum(r.qty,ingredient(r.ingredient).unit)}</td></tr>`).join("")}</tbody>
+    </table></div>
+    <div class="form-actions" style="margin-top:16px;"><button class="btn btn-primary" onclick="closeDetailModal()">Close</button></div>
+  `;
+  document.getElementById("detailOverlay").classList.add("show");
+}
+function closeDetailModal(){ document.getElementById("detailOverlay").classList.remove("show"); }
+
+/* =========================================================================
+   RENDER: RECIPES / BOM
+========================================================================= */
+function renderRecipes(){
+  document.getElementById("recipeDishChips").innerHTML = STATE.dishes.map(d=>
+    `<div class="chip ${d.id===STATE.ui.recipeDish?'active':''}" onclick="setRecipeDish('${d.id}')">${d.name}</div>`).join("");
+  const d = dish(STATE.ui.recipeDish);
+  const sampleQty = 100;
+  document.getElementById("recipeDetail").innerHTML = `
+    <div class="two-col">
+      <div class="card card-pad">
+        <div class="section-title">${d.name} — per portion</div>
+        <div class="section-desc">Selling price ${fmtMoney(d.price)}</div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Ingredient</th><th>Quantity / Portion</th></tr></thead>
+          <tbody>${d.recipe.map(([ingId,amt,unit])=>`<tr><td>${ingredient(ingId).name}</td><td style="font-weight:700;">${amt}${unit}</td></tr>`).join("")}</tbody>
+        </table></div>
+      </div>
+      <div class="card card-pad">
+        <div class="section-title">If production is ${sampleQty} portions</div>
+        <div class="section-desc">The system scales the recipe automatically.</div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Ingredient</th><th>Expected Consumption</th></tr></thead>
+          <tbody>${d.recipe.map(([ingId,amt,unit])=>{
+            const ing=ingredient(ingId); const total = toBaseUnit(amt,unit)*sampleQty;
+            return `<tr><td>${ing.name}</td><td style="font-weight:700;">${fmtNum(round2(total),ing.unit)}</td></tr>`;
+          }).join("")}</tbody>
+        </table></div>
+        <div class="hint">Recipe cost per portion: ${fmtMoney(d.recipe.reduce((s,[ingId,amt,unit])=>s+toBaseUnit(amt,unit)*ingredient(ingId).rate,0))} · Gross margin: ${fmtMoney(d.price - d.recipe.reduce((s,[ingId,amt,unit])=>s+toBaseUnit(amt,unit)*ingredient(ingId).rate,0))}</div>
+      </div>
+    </div>`;
+}
+function setRecipeDish(id){ STATE.ui.recipeDish=id; saveState(); renderRecipes(); }
+
+/* =========================================================================
+   RENDER: CONSUMPTION LOG
+========================================================================= */
+function renderConsumption(){
+  const rows = [...STATE.consumption].reverse().slice(0,60);
+  document.getElementById("consumptionBody").innerHTML = rows.map(c=>`
+    <tr><td>${fmtDateLabel(c.date)}</td><td>${c.batch}</td><td>${dish(c.dish).name}</td><td>${ingredient(c.ingredient).name}</td><td>${c.formula}</td><td style="font-weight:700;">${fmtNum(c.qty,ingredient(c.ingredient).unit)}</td></tr>
+  `).join("") || `<tr><td colspan="6"><div class="empty-note">No consumption logged yet.</div></td></tr>`;
+}
+
+/* =========================================================================
+   RENDER: WASTAGE
+========================================================================= */
+function rebuildWasteItemOptions(){
+  const type = document.getElementById("wType").value;
+  const sel = document.getElementById("wItem");
+  sel.innerHTML = (type==="ingredient" ? STATE.ingredients.map(i=>`<option value="${i.id}">${i.name} (${i.unit})</option>`)
+    : STATE.dishes.map(d=>`<option value="${d.id}">${d.name} (portions)</option>`)).join("");
+}
+function renderWastage(){
+  rebuildWasteItemOptions();
+  const byField = document.getElementById("wBy");
+  if(byField && !byField.value) byField.value = ROLE_NAMES[STATE.role];
+  renderWastageHistory();
+}
+function submitWastage(e){
+  e.preventDefault();
+  const type = document.getElementById("wType").value;
+  const item = document.getElementById("wItem").value;
+  const qty = parseFloat(document.getElementById("wQty").value);
+  const unit = type==="ingredient" ? ingredient(item).unit : "portions";
+  const rate = type==="ingredient" ? ingredient(item).rate : dish(item).recipe.reduce((s,[ingId,amt,u])=>s+toBaseUnit(amt,u)*ingredient(ingId).rate,0);
+  const value = round1(qty*rate);
+  STATE.wastage.push({date:STATE.today, type, item, qty, unit, reason:document.getElementById("wReason").value,
+    dept:document.getElementById("wDept").value, by:document.getElementById("wBy").value, remarks:document.getElementById("wRemarks").value, value});
+  if(type==="ingredient"){ STATE.wipStock[item] = round2(Math.max(0,(STATE.wipStock[item]||0)-qty)); }
+  saveState();
+  showToast("Wastage recorded");
+  document.getElementById("wastageForm").reset();
+  renderWastage();
+  renderInventory();
+}
+function renderWastageHistory(){
+  const rows = [...todaysWastage()].reverse();
+  const total = rows.reduce((s,w)=>s+w.value,0);
+  document.getElementById("wastageTotalDesc").textContent = "Total wastage value today: " + fmtMoney(total);
+  document.querySelector("#wastageHistory tbody").innerHTML = rows.map(w=>{
+    const name = w.type==="ingredient" ? ingredient(w.item).name : dish(w.item).name;
+    return `<tr><td>${name}</td><td>${fmtNum(w.qty,w.unit)}</td><td>${w.reason}</td><td>${w.dept}</td><td>${fmtMoney(w.value)}</td></tr>`;
+  }).join("") || `<tr><td colspan="5"><div class="empty-note">No wastage recorded today.</div></td></tr>`;
+}
+
+/* =========================================================================
+   RENDER: POS SALES + RECONCILIATION — one screen, one flow.
+   A manager types what POS sold; produced/remaining/status update live in the
+   same card, right next to the number they just typed. Complimentary, staff
+   meal and closing stock are visible as a summary line and only need opening
+   when something needs correcting — most days a manager never touches them.
+========================================================================= */
+let reconExpanded = {}; // ephemeral UI state — which dishes have the adjust panel open
+function updatePOS(dishId, val){
+  const qty = parseFloat(val)||0;
+  if(!STATE.posSalesByDate[STATE.today]) STATE.posSalesByDate[STATE.today]={};
+  STATE.posSalesByDate[STATE.today][dishId]=qty;
+  saveState();
+  renderReconciliation();
+  if(currentView==="dashboard") renderDashboard();
+}
+function toggleReconAdjust(dishId){
+  reconExpanded[dishId] = !reconExpanded[dishId];
+  renderReconciliation();
+}
+function renderReconciliation(){
+  document.getElementById("reconList").innerHTML = STATE.dishes.map(d=>{
+    const r = reconFor(d.id);
+    const st = reconStatus(r);
+    const total = r.produced || 1;
+    const remaining = Math.max(0, r.produced - r.sold);
+    const segs = [
+      {v:r.sold, c:"#2F6F62", l:"Sold"}, {v:r.complimentary, c:"#8C6A3F", l:"Complimentary"},
+      {v:r.staffMeal, c:"#B5710A", l:"Staff Meal"}, {v:round1(r.wastage), c:"#B23B34", l:"Wastage"},
+      {v:r.closingStock, c:"#6B7280", l:"Closing Stock"}, {v:Math.max(0,r.unaccounted), c:"#E3B23C", l:"Unaccounted"},
+    ];
+    const bars = segs.map(s=>`<div style="width:${(Math.max(0,s.v)/total*100)}%;background:${s.c};"></div>`).join("");
+    const legend = segs.map(s=>`<span><i style="background:${s.c}"></i>${s.l}: ${round1(s.v)}</span>`).join("");
+    const expanded = !!reconExpanded[d.id];
+    return `<div class="recon-card" id="recon-${d.id}">
+      <div class="recon-head"><div class="dish">${d.name}</div><span class="badge ${st.badge}">${st.text}</span></div>
+      ${st.state==="over" ? `<div class="hint" style="color:var(--bad);margin:-4px 0 10px 0;">POS sold + complimentary + staff meal + wastage + closing stock adds up to more than what was produced. Double-check the POS number and closing stock count for this dish.</div>` : ""}
+      <div class="recon-quick">
+        <div class="rq-item"><label>Produced</label><div class="rq-val">${r.produced}</div></div>
+        <div class="rq-item sold"><label>POS Sold</label><input type="number" inputmode="decimal" value="${r.sold}" onchange="updatePOS('${d.id}',this.value)"></div>
+        <div class="rq-item"><label>Remaining</label><div class="rq-val">${remaining}</div></div>
+      </div>
+      <div class="recon-bars">${bars}</div>
+      <div class="recon-legend" style="margin-bottom:2px;">${legend}</div>
+      <div class="recon-summary-line">
+        <span>Complimentary ${r.complimentary} · Staff Meal ${r.staffMeal} · Wastage ${round1(r.wastage)} · Closing Stock ${r.closingStock}</span>
+        <button type="button" class="link-btn" onclick="toggleReconAdjust('${d.id}')">${expanded?'Hide adjustments':'Adjust'} ${expanded?'▴':'▾'}</button>
+      </div>
+      ${expanded?`
+      <div class="recon-adjust">
+        <div class="field" style="margin-bottom:0;"><label>Complimentary</label><input type="number" inputmode="decimal" value="${r.complimentary}" onchange="updateReconInput('${d.id}','complimentary',this.value)"></div>
+        <div class="field" style="margin-bottom:0;"><label>Staff Meal</label><input type="number" inputmode="decimal" value="${r.staffMeal}" onchange="updateReconInput('${d.id}','staffMeal',this.value)"></div>
+        <div class="field" style="margin-bottom:0;"><label>Closing Stock</label><input type="number" inputmode="decimal" value="${r.closingStock}" onchange="updateReconInput('${d.id}','closingStock',this.value)"></div>
+      </div>`:""}
+    </div>`;
+  }).join("");
+}
+function updateReconInput(dishId, field, val){
+  if(!STATE.reconInputs[dishId]) STATE.reconInputs[dishId]={complimentary:0,staffMeal:0,transfers:0,closingStock:0};
+  STATE.reconInputs[dishId][field] = parseFloat(val)||0;
+  saveState();
+  renderReconciliation();
+  if(currentView==="dashboard") renderDashboard();
+}
+
+/* =========================================================================
+   RENDER: VARIANCE CENTER
+========================================================================= */
+function renderVariance(){
+  const tabs = [["ingredient","Ingredient Variance"],["production","Production Variance"],["sales","Sales Variance"],["wastage","Wastage Variance"],["stock","Stock Variance"]];
+  document.getElementById("varianceTabs").innerHTML = tabs.map(([id,label])=>
+    `<div class="chip ${STATE.ui.varianceTab===id?'active':''}" onclick="setVarianceTab('${id}')">${label}</div>`).join("");
+  const area = document.getElementById("varianceContent");
+  if(STATE.ui.varianceTab==="ingredient"){
+    const rows = STATE.ingredients.map(i=>{
+      const expected = expectedConsumptionToday(i.id);
+      const actual = issuedToday(i.id);
+      const variance = round2(actual-expected);
+      const pct = expected>0 ? Math.abs(variance)/expected*100 : 0;
+      const status = pct>15 ? "Critical" : pct>5 ? "Review" : "Normal";
+      return {i,expected,actual,variance,status};
+    }).filter(r=>r.expected>0 || r.actual>0);
+    area.innerHTML = `<div class="card table-wrap"><table>
+      <thead><tr><th>Ingredient</th><th>Expected (BOM)</th><th>Actual (Issued)</th><th>Variance</th><th>Status</th><th></th></tr></thead>
+      <tbody>${rows.map(r=>`<tr>
+        <td style="font-weight:600;">${r.i.name}</td><td>${fmtNum(r.expected,r.i.unit)}</td><td>${fmtNum(r.actual,r.i.unit)}</td>
+        <td style="font-weight:700;color:${r.variance<0?'var(--bad)':r.variance>0?'var(--warn)':'var(--ink-dim)'}">${r.variance>0?'+':''}${fmtNum(r.variance,r.i.unit)}</td>
+        <td><span class="badge ${r.status==='Normal'?'badge-good':r.status==='Review'?'badge-warn':'badge-bad'}">${r.status}</span></td>
+        <td><button class="btn btn-sm btn-ghost" onclick="showIngredientVarianceDetail('${r.i.id}')">Details</button></td>
+      </tr>`).join("") || `<tr><td colspan="6"><div class="empty-note">No production or issues yet today.</div></td></tr>`}</tbody>
+    </table></div>
+    <div class="hint" style="margin-top:8px;">Negative (red) means the kitchen used more than was ever issued from Central Store — usually a missed Issue Stock entry. Positive (amber) just means surplus is still sitting in the kitchen.</div>`;
+  } else if(STATE.ui.varianceTab==="production"){
+    const rows = STATE.dishes.map(d=>{
+      const produced = dishProducedToday(d.id);
+      const planned = produced; // prototype: planned == logged; show wastage-adjusted yield
+      const wastePct = produced>0 ? round1((dishWastageToday(d.id)/produced)*100) : 0;
+      return {d,produced,wastePct};
+    });
+    area.innerHTML = `<div class="card table-wrap"><table><thead><tr><th>Dish</th><th>Portions Produced</th><th>Wastage %</th><th>Status</th></tr></thead>
+      <tbody>${rows.map(r=>`<tr><td style="font-weight:600;">${r.d.name}</td><td>${r.produced}</td><td>${r.wastePct}%</td>
+      <td><span class="badge ${r.wastePct>5?'badge-warn':'badge-good'}">${r.wastePct>5?'Review':'Normal'}</span></td></tr>`).join("")}</tbody>
+    </table></div>`;
+  } else if(STATE.ui.varianceTab==="sales"){
+    area.innerHTML = `<div class="card table-wrap"><table><thead><tr><th>Dish</th><th>Produced</th><th>POS Sold</th><th>Sell-through</th><th>Status</th></tr></thead>
+      <tbody>${STATE.dishes.map(d=>{
+        const produced = dishProducedToday(d.id); const sold = todaysPOS()[d.id]||0;
+        const pct = produced>0 ? round1((sold/produced)*100) : 0;
+        return `<tr><td style="font-weight:600;">${d.name}</td><td>${produced}</td><td>${sold}</td><td>${pct}%</td>
+        <td><span class="badge ${pct<80?'badge-warn':'badge-good'}">${pct<80?'Review':'Normal'}</span></td></tr>`;
+      }).join("")}</tbody></table></div>`;
+  } else if(STATE.ui.varianceTab==="wastage"){
+    const byReason = {};
+    todaysWastage().forEach(w=>{ byReason[w.reason]=(byReason[w.reason]||0)+w.value; });
+    const total = Object.values(byReason).reduce((a,b)=>a+b,0)||1;
+    area.innerHTML = `<div class="card card-pad">${Object.keys(byReason).length? Object.entries(byReason).map(([reason,val])=>`
+      <div style="margin-bottom:10px;"><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;"><span>${reason}</span><span style="font-weight:700;">${fmtMoney(val)}</span></div>
+      <div style="background:var(--border-soft);border-radius:99px;height:8px;"><div style="width:${val/total*100}%;background:var(--bad);height:8px;border-radius:99px;"></div></div></div>`).join("")
+      : `<div class="empty-note">No wastage recorded today.</div>`}</div>`;
+  } else if(STATE.ui.varianceTab==="stock"){
+    const rows = STATE.ingredients.map(i=>invRow(i.id)).filter(r=>r.status!=="Normal");
+    area.innerHTML = `<div class="card table-wrap"><table><thead><tr><th>Ingredient</th><th>Book Stock</th><th>Physical Stock</th><th>Variance</th><th>Status</th></tr></thead>
+      <tbody>${rows.length?rows.map(r=>`<tr><td style="font-weight:600;">${r.ingredient.name}</td><td>${fmtNum(r.book,r.ingredient.unit)}</td><td>${fmtNum(r.physical,r.ingredient.unit)}</td>
+      <td style="font-weight:700;color:${r.variance<0?'var(--bad)':'var(--good)'}">${r.variance>0?'+':''}${fmtNum(r.variance,r.ingredient.unit)}</td>
+      <td><span class="badge ${r.status==='Review'?'badge-warn':'badge-bad'}">${r.status}</span></td></tr>`).join(""):`<tr><td colspan="5"><div class="empty-note">All ingredients within normal stock variance.</div></td></tr>`}</tbody></table></div>`;
+  }
+}
+function setVarianceTab(id){ STATE.ui.varianceTab=id; saveState(); renderVariance(); }
+function showIngredientVarianceDetail(ingId){
+  const ing = ingredient(ingId);
+  const cons = todaysConsumption().filter(c=>c.ingredient===ingId);
+  const iss = todaysIssues().filter(i=>i.ingredient===ingId);
+  document.getElementById("detailModalBody").innerHTML = `
+    <h3>${ing.name} — Variance Detail</h3>
+    <div class="modal-desc">Every issue and expected-consumption transaction behind today's variance figure.</div>
+    <div class="section-title">Issued to Kitchen</div>
+    <div class="table-wrap"><table><thead><tr><th>Dept</th><th>Qty</th><th>By</th></tr></thead>
+      <tbody>${iss.map(i=>`<tr><td>${i.dept}</td><td>${fmtNum(i.qty,i.unit)}</td><td>${i.by}</td></tr>`).join("")||'<tr><td colspan="3">None</td></tr>'}</tbody></table></div>
+    <div class="section-title" style="margin-top:14px;">Expected Consumption (BOM)</div>
+    <div class="table-wrap"><table><thead><tr><th>Batch</th><th>Dish</th><th>Formula</th><th>Qty</th></tr></thead>
+      <tbody>${cons.map(c=>`<tr><td>${c.batch}</td><td>${dish(c.dish).name}</td><td>${c.formula}</td><td>${fmtNum(c.qty,ing.unit)}</td></tr>`).join("")||'<tr><td colspan="4">None</td></tr>'}</tbody></table></div>
+    <div class="form-actions" style="margin-top:16px;"><button class="btn btn-primary" onclick="closeDetailModal()">Close</button></div>
+  `;
+  document.getElementById("detailOverlay").classList.add("show");
+}
+
+/* =========================================================================
+   RENDER: REPORTS
+========================================================================= */
+function renderReports(){
+  const dateSel = document.getElementById("reportDate");
+  if(dateSel.options.length===0){
+    dateSel.innerHTML = STATE.days.map(d=>`<option value="${d}" ${d===STATE.today?'selected':''}>${fmtDateLabel(d)}${d===STATE.today?' (Today)':''}</option>`).join("");
+  }
+  const type = document.getElementById("reportType").value;
+  const date = dateSel.value || STATE.today;
+  const area = document.getElementById("reportArea");
+  const forDate = arr => arr.filter(x=>x.date===date);
+
+  if(type==="stock"){
+    area.innerHTML = `<table><thead><tr><th>Ingredient</th><th>Category</th><th>Book Stock</th><th>Value</th></tr></thead><tbody>
+      ${STATE.ingredients.map(i=>`<tr><td>${i.name}</td><td>${i.category}</td><td>${fmtNum(STATE.centralStock[i.id],i.unit)}</td><td>${fmtMoney((STATE.centralStock[i.id]||0)*i.rate)}</td></tr>`).join("")}
+    </tbody></table>`;
+  } else if(type==="production"){
+    const rows = forDate(STATE.production);
+    area.innerHTML = `<table><thead><tr><th>Batch</th><th>Dish</th><th>Qty</th><th>Wastage</th><th>Chef</th><th>Shift</th></tr></thead><tbody>
+      ${rows.map(p=>`<tr><td>${p.batch}</td><td>${dish(p.dish).name}</td><td>${p.qty}</td><td>${p.wastage}</td><td>${p.chef}</td><td>${p.shift}</td></tr>`).join("") || emptyRow(6)}
+    </tbody></table>`;
+  } else if(type==="consumption"){
+    const rows = forDate(STATE.consumption);
+    area.innerHTML = `<table><thead><tr><th>Batch</th><th>Dish</th><th>Ingredient</th><th>Formula</th><th>Qty</th></tr></thead><tbody>
+      ${rows.map(c=>`<tr><td>${c.batch}</td><td>${dish(c.dish).name}</td><td>${ingredient(c.ingredient).name}</td><td>${c.formula}</td><td>${fmtNum(c.qty,ingredient(c.ingredient).unit)}</td></tr>`).join("") || emptyRow(5)}
+    </tbody></table>`;
+  } else if(type==="wastage"){
+    const rows = forDate(STATE.wastage);
+    const total = rows.reduce((s,w)=>s+w.value,0);
+    area.innerHTML = `<table><thead><tr><th>Item</th><th>Qty</th><th>Reason</th><th>Dept</th><th>By</th><th>Value</th></tr></thead><tbody>
+      ${rows.map(w=>`<tr><td>${w.type==='ingredient'?ingredient(w.item).name:dish(w.item).name}</td><td>${fmtNum(w.qty,w.unit)}</td><td>${w.reason}</td><td>${w.dept}</td><td>${w.by}</td><td>${fmtMoney(w.value)}</td></tr>`).join("") || emptyRow(6)}
+      </tbody></table><div style="padding:12px;font-weight:700;">Total wastage value: ${fmtMoney(total)}</div>`;
+  } else if(type==="foodcost"){
+    const cons = forDate(STATE.consumption);
+    const cost = cons.reduce((s,c)=>s+c.qty*ingredient(c.ingredient).rate,0);
+    const pos = STATE.posSalesByDate[date]||{};
+    const sales = STATE.dishes.reduce((s,d)=>s+((pos[d.id]||0)*d.price),0);
+    area.innerHTML = `<div class="card-pad">
+      <div class="grid-metrics" style="grid-template-columns:repeat(3,1fr);">
+        <div class="metric-card"><div class="m-label">Sales Value</div><div class="m-value">${fmtMoney(sales)}</div></div>
+        <div class="metric-card"><div class="m-label">Food Cost</div><div class="m-value">${fmtMoney(cost)}</div></div>
+        <div class="metric-card"><div class="m-label">Food Cost %</div><div class="m-value">${sales>0?round1(cost/sales*100):0}%</div></div>
+      </div></div>`;
+  } else if(type==="prodsales"){
+    area.innerHTML = `<table><thead><tr><th>Dish</th><th>Produced</th><th>Sold</th><th>Remaining</th></tr></thead><tbody>
+      ${STATE.dishes.map(d=>{
+        const prod = forDate(STATE.production).filter(p=>p.dish===d.id).reduce((s,p)=>s+p.qty,0);
+        const sold = (STATE.posSalesByDate[date]||{})[d.id]||0;
+        return `<tr><td>${d.name}</td><td>${prod}</td><td>${sold}</td><td>${Math.max(0,prod-sold)}</td></tr>`;
+      }).join("")}</tbody></table>`;
+  } else if(type==="variance"){
+    area.innerHTML = `<div class="card-pad"><div class="empty-note">Open the Variance Center for live, drill-down variance across ingredients, production, sales, wastage and stock.</div>
+      <div style="text-align:center;"><button class="btn btn-2" onclick="navigate('variance')">Go to Variance Center</button></div></div>`;
+  } else if(type==="purchase"){
+    const rows = forDate(STATE.purchases);
+    area.innerHTML = `<table><thead><tr><th>Supplier</th><th>Invoice</th><th>Ingredient</th><th>Qty</th><th>Rate</th><th>Total</th></tr></thead><tbody>
+      ${rows.map(p=>`<tr><td>${p.supplier}</td><td>${p.invoice}</td><td>${ingredient(p.ingredient).name}</td><td>${fmtNum(p.qty,p.unit)}</td><td>${fmtMoney(p.rate)}</td><td>${fmtMoney(p.total)}</td></tr>`).join("") || emptyRow(6)}
+    </tbody></table>`;
+  } else if(type==="movement"){
+    area.innerHTML = `<table><thead><tr><th>Ingredient</th><th>Received</th><th>Issued</th><th>Consumed</th><th>Wastage</th></tr></thead><tbody>
+      ${STATE.ingredients.map(i=>{
+        const rec = forDate(STATE.purchases).filter(p=>p.ingredient===i.id).reduce((s,p)=>s+p.qty,0);
+        const iss = forDate(STATE.issues).filter(x=>x.ingredient===i.id).reduce((s,x)=>s+x.qty,0);
+        const cons = forDate(STATE.consumption).filter(x=>x.ingredient===i.id).reduce((s,x)=>s+x.qty,0);
+        const wst = forDate(STATE.wastage).filter(w=>w.type==='ingredient' && w.item===i.id).reduce((s,w)=>s+w.qty,0);
+        return `<tr><td>${i.name}</td><td>${fmtNum(rec,i.unit)}</td><td>${fmtNum(iss,i.unit)}</td><td>${fmtNum(round2(cons),i.unit)}</td><td>${fmtNum(wst,i.unit)}</td></tr>`;
+      }).join("")}</tbody></table>`;
+  }
+}
+function emptyRow(cols){ return `<tr><td colspan="${cols}"><div class="empty-note">No records for this date.</div></td></tr>`; }
+
+/* =========================================================================
+   DEMO FLOW
+========================================================================= */
+const DEMO_STEPS = [
+  "Receive 50 kg Chicken into Central Store",
+  "Central Store stock increases to reflect the purchase",
+  "Issue 20 kg Chicken to Main Kitchen for Chef Ravi",
+  "Chef Ravi produces 100 portions of Chicken Biryani",
+  "BOM calculates expected consumption automatically",
+  "POS reports 90 portions sold — demo import",
+  "System shows 10 portions remaining",
+  "Store records 5 portions as closing stock",
+  "Kitchen records 2 portions as wastage",
+  "System calculates 3 portions unaccounted",
+  "Dashboard shows Review Required for Chicken Biryani",
+];
+function openDemoModal(){
+  document.getElementById("demoSteps").innerHTML = DEMO_STEPS.map((s,i)=>
+    `<div class="demo-step" id="demostep-${i}"><span class="chk"></span><span class="txt">${s}</span></div>`).join("");
+  document.getElementById("demoOverlay").classList.add("show");
+}
+function closeDemoModal(){ document.getElementById("demoOverlay").classList.remove("show"); }
+function runDemoFlow(){
+  const btn = document.getElementById("demoRunBtn");
+  btn.disabled = true; btn.textContent = "Running...";
+  let i=0;
+  function step(){
+    if(i>0) document.getElementById("demostep-"+(i-1)).classList.replace("active","done");
+    if(i>=DEMO_STEPS.length){
+      btn.disabled=false; btn.textContent="Restart Demo";
+      setTimeout(()=>{ closeDemoModal(); navigate("dashboard"); STATE.ui.dashDish="dish-cbiryani"; saveState(); renderDashboard(); showToast("Demo complete — Chicken Biryani needs review"); },500);
+      return;
+    }
+    document.getElementById("demostep-"+i).classList.add("active");
+    i++;
+    setTimeout(step, 850);
+  }
+  step();
+}
+
+/* =========================================================================
+   INIT
+========================================================================= */
+function renderAll(){
+  document.getElementById("userName").textContent = ROLE_NAMES[STATE.role];
+  document.getElementById("userRoleLabel").textContent = {Owner:"Owner", Manager:"Restaurant Manager", Store:"Store Manager", Chef:"Chef"}[STATE.role];
+  document.getElementById("userAvatar").textContent = ROLE_NAMES[STATE.role][0];
+  document.getElementById("roleSwitcher").value = STATE.role;
+  updateTopbarForRole();
+  navigate(currentView);
+}
+document.addEventListener("DOMContentLoaded", ()=>{
+  loadState();
+  renderAll();
+});
+</script>
+</body>
+</html>
