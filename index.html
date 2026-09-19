@@ -1579,7 +1579,7 @@ function submitIssue(e){
 function renderIssueHistory(){
   const rows = [...STATE.issues].reverse().slice(0,14);
   document.querySelector("#issueHistory tbody").innerHTML = rows.map(i=>`
-    <tr><td>${fmtDateLabel(i.date)}</td><td>${ingredient(i.ingredient).name}</td><td>${fmtNum(i.qty,i.unit)}</td><td>${i.dept}</td><td>${i.by}</td></tr>
+    ${ingredient(i.ingredientId)?.name || i.ingredientName || "Unknown ingredient"}
   `).join("") || `<tr><td colspan="5"><div class="empty-note">No issues recorded yet.</div></td></tr>`;
 }
 
