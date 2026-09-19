@@ -926,6 +926,15 @@ async function apiFetch(path, options = {}) {
 
   return response.status === 204 ? null : response.json();
 }
+  async function loginUser(email, password) {
+  const result = await apiFetch("/api/auth/login", {
+    method: "POST",
+    body: JSON.stringify({ email, password })
+  });
+
+  localStorage.setItem("inventorypro_token", result.token);
+  return result.user;
+}
   let STATE = null;
 function loadState(){
   const raw = localStorage.getItem("ksp_state_v1");
