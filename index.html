@@ -935,7 +935,23 @@ async function apiFetch(path, options = {}) {
   localStorage.setItem("inventorypro_token", result.token);
   return result.user;
 }
-  let STATE = null;
+  
+  async function ensureLogin() {
+  if (localStorage.getItem("inventorypro_token")) return true;
+
+  const email = prompt("InventoryPro Email:");
+  const password = prompt("InventoryPro Password:");
+
+  if (!email || !password) return false;
+
+  try {
+    await loginUser(email, password);
+    return true;
+  } catch (error) {
+    alert(error.message || "Login failed");
+    return false;
+  }
+}  let STATE = null;
 function loadState(){
   const raw = localStorage.getItem("ksp_state_v1");
   if(raw){ try{ STATE = JSON.parse(raw); return; }catch(e){} }
@@ -2005,9 +2021,47 @@ function renderAll(){
   updateTopbarForRole();
   navigate(currentView);
 }
-document.addEventListener("DOMContentLoaded", ()=>{
+document.addEventListener("DOMContentLoaded", async () => {
   loadState();
-  renderAll();
+
+  const token = localStorage.getItem("inventorypro_token");
+
+  if (!token) {
+    const email = prompt("InventoryPro Email:");
+    const password = prompt("InventoryPro Password:");
+
+    if (!email || !password) {
+      alert("Login required to continue.");
+      return;
+    }
+
+    try {
+      await loginUser(email, password);
+    } catch (error) {
+      alert(error.message || "Login failed");
+      return;
+    }
+  }
+
+  try {
+    const user = await apiFetch("/api/auth/me");
+
+    const roleMap = {
+      owner: "Owner",
+      manager: "Manager",
+      chef: "Chef"
+    };
+
+    if (STATE && user) {
+      STATE.role = roleMap[user.role] || "Owner";
+      saveState();
+    }
+
+    renderAll();
+  } catch (error) {
+    localStorage.removeItem("inventorypro_token");
+    alert("Your session has expired. Please refresh and log in again.");
+  }
 });
 </script>
 </body>
